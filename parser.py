@@ -83,13 +83,14 @@ def parse_constraints(f):
     return period_hard_constraints, room_hard_constraints, institutional_constraints
 
 
-def main():
+def parse():
     with open('data/exam_comp_set1.exam') as f:
         exams = parse_exams(f)
         periods = parse_periods(f)
         rooms = parse_rooms(f)
         period_constraints, room_constraints, institutional_constraints = parse_constraints(f)
+        return exams, periods, rooms, period_constraints, room_constraints, institutional_constraints
 
 
 if __name__ == "__main__":
-    main()
+    parse()

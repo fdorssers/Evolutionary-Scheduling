@@ -5,7 +5,7 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
-
+import parser
 
 def fitness(individual):
     """
@@ -24,10 +24,13 @@ def mutate(individual, indpb=0.05):
     return individual,
 
 
-ROOMS = 10
-PERIODS = 100
-EXAMS = 200
-INDIVIDUALS = 100
+exams, periods, rooms, period_constraints, room_constraints, institutional_constraints = parser.parse()
+ROOMS = len(rooms)
+PERIODS = len(periods)
+EXAMS = len(exams)
+INDIVIDUALS = 10
+
+print("Running ea with", ROOMS, "rooms,", PERIODS, "periods and", EXAMS, "exams")
 
 # Only use one fitness function
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -50,7 +53,7 @@ toolbox.register("mate", tools.cxTwoPoint)
 # Use the mutation operator specified in this file
 toolbox.register("mutate", mutate, indpb=0.05)
 # Use tournament selection
-toolbox.register("select", tools.selTournament, tournsize=2)
+toolbox.register("select", tools.selTournament, tournsize=3)
 
 
 def main():
