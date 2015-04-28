@@ -1,35 +1,34 @@
+from exam import Exam
+from period import Period
 
 
-def parse_courses(f):
-    nr_exams = int(''.join(x for x in f.readline() if x.isdigit()))
-    exam_students = {}
-    exam_lengths = {}
+def parse_int_from_header(header):
+    return int(''.join(x for x in header if x.isdigit()))
+
+
+def parse_exams(f):
+    nr_exams = parse_int_from_header(f.readline())
+    exams = {}
     for i in range(nr_exams):
         vals = list(map(int, f.readline().split((','))))
-        exam_students[i] = vals[1:]
-        exam_lengths[i] = vals[0]
-    return nr_exams, exam_students, exam_lengths
+        exams[i] = Exam(vals[0], vals[1:])
+    return exams
 
 
 def parse_periods(f):
-    nr_periods = int(''.join(x for x in f.readline() if x.isdigit()))
-    period_date = {}
-    period_start = {}
-    period_length = {}
-    period_penalty = {}
+    nr_periods = parse_int_from_header(f.readline())
+    periods = {}
     for i in range(nr_periods):
         vals = f.readline().split((','))
-        period_date[i] = vals[0]
-        period_start[i] = vals[1]
-        period_length[i] = vals[2]
-        period_penalty[i] = vals[3]
-    return nr_periods, period_date, period_start, period_length, period_penalty
+        periods[i] = Period(vals[0], vals[1], vals[2], vals[3])
+    return periods
 
 
 def main():
+    periods = {}
     with open('data/exam_comp_set1.exam') as f:
-        parse_courses(f)
-        parse_periods(f)
+        exams = parse_exams(f)
+        periods = parse_periods(f)
 
 if __name__ == "__main__":
     main()
