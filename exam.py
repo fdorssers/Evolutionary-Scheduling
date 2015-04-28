@@ -5,4 +5,4 @@ class Exam(object):
         self.students = students
 
     def __repr__(self):
-        return 'duration: {}, students: {}'.format(self.duration, self.students)
+        return 'Exam(duration: {}, students: {})'.format(self.duration, self.students)

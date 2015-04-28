@@ -7,4 +7,4 @@ class Period(object):
         self.penalty = penalty
 
     def __repr__(self):
-        return 'date: {}, start: {}, duration: {}, penalty: {}'.format(self.date, self.start, self.duration, self.penalty)
+        return 'Period(date: {}, start: {}, duration: {}, penalty: {})'.format(self.date, self.start, self.duration, self.penalty)
