@@ -1,4 +1,5 @@
 from exam import Exam
+from institutionalconstraint import InstitutionalConstraint
 from period import Period
 from periodhardconstraint import PeriodHardConstraint
 from room import Room
@@ -40,24 +41,37 @@ def parse_period_hard_constraints(f):
     # If it encounters this header it should stop
     room_header = '[RoomHardConstraints]'
     period_hard_constraints = []
-    line = f.readline()
-    while(room_header not in line):
-        vals = line.split(',')
-        period_hard_constraints.append(PeriodHardConstraint(vals[1], int(vals[0]), int(vals[2])))
-        line = f.readline()
-    return period_hard_constraints
+    for line in f:
+        if(room_header in line):
+            return period_hard_constraints
+        else:
+            vals = line.split(',')
+            period_hard_constraints.append(PeriodHardConstraint(vals[1], int(vals[0]), int(vals[2])))
 
 
 def parse_room_hard_constraints(f):
     # If it encounters this header it should stop
-    room_header = '[InstitutionalWeightings]'
+    institutional_header = '[InstitutionalWeightings]'
     room_hard_constraints = []
-    line = f.readline()
-    while(room_header not in line):
-        vals = line.split(',')
-        room_hard_constraints.append(RoomHardConstraint(vals[1], int(vals[0])))
-        line = f.readline()
-    return room_hard_constraints
+    for line in f:
+        if(institutional_header in line):
+            return room_hard_constraints
+        else:
+            vals = line.split(',')
+            room_hard_constraints.append(RoomHardConstraint(vals[1], int(vals[0])))
+
+
+def parse_institutional_constraints(f):
+    institutional_constraints = []
+    for line in f:
+        vals = line.strip().split(',')
+        if(not vals[0]):
+            return institutional_constraints
+        else:
+            if(len(vals) > 2):
+                institutional_constraints.append(InstitutionalConstraint(vals[0], -1, list(map(int, vals[1:]))))
+            else:
+                institutional_constraints.append(InstitutionalConstraint(vals[0], int(vals[1]), []))
 
 
 def parse_constraints(f):
@@ -65,16 +79,16 @@ def parse_constraints(f):
     f.readline()
     period_hard_constraints = parse_period_hard_constraints(f)
     room_hard_constraints = parse_room_hard_constraints(f)
-    return period_hard_constraints, room_hard_constraints
+    institutional_constraints = parse_institutional_constraints(f)
+    return period_hard_constraints, room_hard_constraints, institutional_constraints
 
 
 def main():
-    periods = {}
     with open('data/exam_comp_set1.exam') as f:
         exams = parse_exams(f)
         periods = parse_periods(f)
         rooms = parse_rooms(f)
-        period_constraints, room_constraints = parse_constraints(f)
+        period_constraints, room_constraints, institutional_constraints = parse_constraints(f)
 
 
 if __name__ == "__main__":
