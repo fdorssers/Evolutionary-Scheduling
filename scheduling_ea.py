@@ -6,14 +6,7 @@ from deap import base
 from deap import creator
 from deap import tools
 import schedule_parser as parser
-
-
-def fitness(individual):
-    """
-    Calculate the fitness of the schedule
-    """
-    rooms, periods = zip(*individual)
-    return sum(rooms) + sum(periods),
+import fitness
 
 
 def mutate(individual, indpb=0.05):
@@ -48,7 +41,7 @@ toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.att
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 # Use the fitness function specified in this file
-toolbox.register("evaluate", fitness)
+toolbox.register("evaluate", fitness.naive_fitness)
 # Use two point cross over
 toolbox.register("mate", tools.cxTwoPoint)
 # Use the mutation operator specified in this file
