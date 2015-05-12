@@ -71,7 +71,6 @@ def main():
 
     algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.01, ngen=40, stats=stats, halloffame=hof)
 
-    print(pop[0])
     return pop, stats, hof
 
 

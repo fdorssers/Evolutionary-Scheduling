@@ -37,8 +37,6 @@ def conflict_constraint(individual, period_constraints):
         first_exam = individual[exam_coincidence_constraint.first]
         second_exam = individual[exam_coincidence_constraint.second]
         violations += first_exam[1] == second_exam[1]
-    if violations > 0:
-        print(violations)
     return violations
 
 
@@ -47,6 +45,7 @@ def room_occupancy_constraint(individual, room_constraints):
 
     More seating required in any individual period than that available.
     """
+
     return MUCH
 
 
