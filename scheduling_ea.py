@@ -5,7 +5,8 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
-import parser
+import schedule_parser as parser
+
 
 def fitness(individual):
     """
