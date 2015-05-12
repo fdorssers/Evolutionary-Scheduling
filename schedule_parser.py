@@ -1,7 +1,7 @@
 from exam import Exam
 from institutionalconstraint import InstitutionalConstraint
 from period import Period
-from periodhardconstraint import PeriodHardConstraint
+from periodhardconstraint import PeriodHardConstraint, PeriodHardEnum
 from room import Room
 from roomhardconstraint import RoomHardConstraint
 
@@ -40,13 +40,18 @@ def parse_rooms(f):
 def parse_period_hard_constraints(f):
     # If it encounters this header it should stop
     room_header = '[RoomHardConstraints]'
-    period_hard_constraints = []
+    # period_hard_constraints = []
+    period_hard_constraints = {}
+    for constraint in PeriodHardEnum:
+        period_hard_constraints[constraint] = []
     for line in f:
         if(room_header in line):
             return period_hard_constraints
         else:
-            vals = line.split(',')
-            period_hard_constraints.append(PeriodHardConstraint(vals[1], int(vals[0]), int(vals[2])))
+            vals = [s.strip() for s in line.split(',')]
+            constraint = PeriodHardEnum.fromstring(vals[1])
+            period_hard_constraints[constraint].append(PeriodHardConstraint(constraint, int(vals[0]), int(vals[2])))
+            # period_hard_constraints.append(PeriodHardConstraint(vals[1], int(vals[0]), int(vals[2])))
 
 
 def parse_room_hard_constraints(f):
