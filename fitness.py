@@ -1,3 +1,5 @@
+from periodhardconstraint import PeriodHardEnum
+
 MUCH = 1000
 
 
@@ -30,8 +32,7 @@ def conflict_constraint(individual, period_constraints):
 
     Two conflicting exams in the same period.
     """
-    exam_coincidence_filter = lambda x: x.constraint == " EXAM_COINCIDENCE"
-    exam_coincidence_constraints = list(filter(exam_coincidence_filter, period_constraints))
+    exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXAM_COINCIDENCE]
     violations = 0
     for exam_coincidence_constraint in exam_coincidence_constraints:
         first_exam = individual[exam_coincidence_constraint.first]
