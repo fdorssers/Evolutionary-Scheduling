@@ -1,3 +1,4 @@
+import functools
 from periodhardconstraint import PeriodHardEnum
 
 MUCH = 1000
@@ -12,8 +13,8 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
     period_related_fitness = period_related_constraint(schedule, period_constraints)
     room_related_fitness = room_related_constraint(schedule, room_constraints)
+    two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule)
-    two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule)
     period_spread_fitness = period_spread_constraint(schedule, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
@@ -86,12 +87,31 @@ def room_related_constraint(schedule, room_constraints):
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
 
 
-def two_exams_in_a_row_constraint(schedule):
+def two_exams_in_a_row_constraint(schedule, periods, exams):
     """Returns penalty
 
     Count the number of occurrences where two examinations are taken by students straight after one another i.e. back to back. Once this has been established, the number of students involved in each occurance should be added and multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
     """
-    return MUCH
+    # Get mapping from periods to exam in that period
+    period_to_exam = dict()
+    for exam_i, (_, period_i) in enumerate(schedule):
+        if period_i in period_to_exam:
+            period_to_exam[period_i].append(exams[exam_i])
+        else:
+            period_to_exam[period_i] = [exams[exam_i]]
+    # Count number of occurrences that students have two exams in a row
+    used_periods = sorted(list(set(period_to_exam.keys())))
+    violations = 0
+    for first_period, second_period in zip(used_periods[:-1], used_periods[1:]):
+        if periods[first_period].date == periods[second_period].date:
+            f_get_students = lambda x: x.students
+            first_students = map(f_get_students, period_to_exam[first_period])
+            second_students = map(f_get_students, period_to_exam[second_period])
+            first_students = set([item for sublist in first_students for item in sublist])
+            second_students = set([item for sublist in second_students for item in sublist])
+            intersect = first_students & second_students
+            violations += len(intersect)
+    return violations
 
 
 def two_exams_in_a_day_constraint(schedule):
