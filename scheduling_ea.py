@@ -27,7 +27,7 @@ INDIVIDUALS = 10
 print("Running ea with", ROOMS, "rooms,", PERIODS, "periods and", EXAMS, "exams")
 
 # Only use one fitness function
-creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("FitnessMax", base.Fitness, weights=tuple([1.0] * 12))
 # Set the type of individuals to numpy arrays
 creator.create("Individual", list, fitness=creator.FitnessMax)
 
@@ -41,7 +41,8 @@ toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.att
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 # Use the fitness function specified in this file
-toolbox.register("evaluate", fitness.naive_fitness)
+toolbox.register("evaluate", fitness.naive_fitness, period_constraints=period_constraints, room_constraints=room_constraints,
+                 institutional_constraints=institutional_constraints)
 # Use two point cross over
 toolbox.register("mate", tools.cxTwoPoint)
 # Use the mutation operator specified in this file

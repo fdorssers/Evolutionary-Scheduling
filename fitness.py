@@ -1,53 +1,68 @@
+MUCH = 1000
 
 
-def naive_fitness(individual):
+def naive_fitness(individual, period_constraints, room_constraints, institutional_constraints):
     """
     Calculate the fitness of the schedule
     """
-    rooms, periods = zip(*individual)
-    return sum(rooms) + sum(periods),
+    conflict_fitness = conflict_constraint(individual, period_constraints)
+    room_occupancy_fitness = room_occupancy_constraint(individual, room_constraints)
+    period_utilisation_fitness = period_utilisation_constraint(individual, period_constraints)
+    period_related_fitness = period_related_constraint(individual, period_constraints)
+    room_related_fitness = room_related_constraint(individual, room_constraints)
+    two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(individual)
+    two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(individual)
+    period_spread_fitness = period_spread_constraint(individual, institutional_constraints)
+    mixed_duration_fitness = mixed_duration_constraint(individual)
+    larger_exams_fitness = larger_exams_constraint(individual, institutional_constraints)
+    room_penalty_fitness = room_penalty_constraint(individual, institutional_constraints)
+    period_penalty_fitness = period_penalty_constraint(individual, institutional_constraints)
+    return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness, 
+            period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, 
+            period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness, 
+            period_penalty_fitness)
 
 # Hard constraints
 
 
-def conflict_constraint(individual):
+def conflict_constraint(individual, period_constraints):
     """Returns penalty
 
     Two conflicting exams in the same period.
     """
-    pass
+    return MUCH
 
 
-def room_occupancy_constraint(individual):
+def room_occupancy_constraint(individual, room_constraints):
     """Returns penalty
 
     More seating required in any individual period than that available.
     """
-    pass
+    return MUCH
 
 
-def period_utilisation_constraint(individual):
+def period_utilisation_constraint(individual, period_constraints):
     """Returns penalty
 
     More time required in any individual period than that available.
     """
-    pass
+    return MUCH
 
 
-def period_related_constraint(individual):
+def period_related_constraint(individual, period_constraints):
     """Returns penalty
 
     Ordering requirements not obeyed.
     """
-    pass
+    return MUCH
 
 
-def room_related_constraint(individual):
+def room_related_constraint(individual, room_constraints):
     """Returns penalty
 
     Room requirements not obeyed
     """
-    pass
+    return MUCH
 
 # Soft constraints
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
@@ -58,7 +73,7 @@ def two_exams_in_a_row_constraint(individual):
 
     Count the number of occurrences where two examinations are taken by students straight after one another i.e. back to back. Once this has been established, the number of students involved in each occurance should be added and multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
     """
-    pass
+    return MUCH
 
 
 def two_exams_in_a_day_constraint(individual):
@@ -66,15 +81,15 @@ def two_exams_in_a_day_constraint(individual):
 
     In the case where there are three periods or more in a day, count the number of occurrences of students having two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a day' weighting provided within the 'Institutional Model Index'.
     """
-    pass
+    return MUCH
 
 
-def period_spread_constraint(individual):
+def period_spread_constraint(individual, institutional_constraints):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an individual's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    pass
+    return MUCH
 
 
 def mixed_duration_constraint(individual):
@@ -82,28 +97,28 @@ def mixed_duration_constraint(individual):
 
     This applies a penalty to a ROOM and PERIOD (not Exam) where there are mixed durations.
     """
-    pass
+    return MUCH
 
 
-def larger_exams_constraint(individual):
+def larger_exams_constraint(individual, institutional_constraints):
     """Returns penalty
 
     It is desirable that examinations with the largest numbers of students are timetabled at the beginning of the examination session.
     """
-    pass
+    return MUCH
 
 
-def room_penalty_constraint(individual):
+def room_penalty_constraint(individual, institutional_constraints):
     """Returns penalty
 
     It is often the case that organisations want to keep certain room usage to a minimum. As with the 'Mixed Durations' component of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period, if a room used within the solution has an associated penalty, the penalty for that room for that period is calculated by multiplying the associated penalty by the number of times the room is used.
     """
-    pass
+    return MUCH
 
 
-def period_penalty_constraint(individual):
+def period_penalty_constraint(individual, institutional_constraints):
     """Returns penalty
 
     It is often the case that organisations want to keep certain period usage to a minimum. As with the 'Mixed Durations' and the 'Room Penalty' components of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period the penalty is calculated by multiplying the associated penalty by the number of times the exams timetabled within that period.
     """
-    pass
+    return MUCH
