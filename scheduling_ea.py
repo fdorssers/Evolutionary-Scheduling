@@ -8,13 +8,14 @@ from deap import tools
 import schedule_parser as parser
 import fitness
 
+# Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 def mutate(individual, indpb=0.05):
     """
     Mutate the schedule
     """
     for i in range(0, len(individual)):
-        individual[i] = (random.randint(0, ROOMS), individual[i][1] + random.randint(-2, 2))
+        individual[i] = (random.randint(0, ROOMS-1), (individual[i][1] + random.randint(-2, 2)) % PERIODS)
     return individual,
 
 
@@ -34,14 +35,15 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 # Use the toolbox to initialize the individuals
 toolbox = base.Toolbox()
 # Attributes to generate random rooms and periods
-toolbox.register("attr_exam", lambda: (random.randint(0, ROOMS), random.randint(0, PERIODS)))
+toolbox.register("attr_exam", lambda: (random.randint(0, ROOMS-1), random.randint(0, PERIODS-1)))
 # Create the individual with alternating rooms and periods
 toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_exam, n=EXAMS)
 # Create the population as a list of the individuals
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
 # Use the fitness function specified in this file
-toolbox.register("evaluate", fitness.naive_fitness, period_constraints=period_constraints, room_constraints=room_constraints,
+toolbox.register("evaluate", fitness.naive_fitness, exams=exams, periods=periods, rooms=rooms,
+                 period_constraints=period_constraints, room_constraints=room_constraints,
                  institutional_constraints=institutional_constraints)
 # Use two point cross over
 toolbox.register("mate", tools.cxTwoPoint)
