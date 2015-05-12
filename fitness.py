@@ -67,7 +67,12 @@ def period_related_constraint(schedule, period_constraints):
 
     Ordering requirements not obeyed.
     """
-    return MUCH
+    violations = 0
+    for order_constraint in period_constraints[PeriodHardEnum.AFTER]:
+        first_period = schedule[order_constraint.first][1]
+        second_period = schedule[order_constraint.second][1]
+        violations += second_period >= first_period
+    return violations
 
 
 def room_related_constraint(schedule, room_constraints):
