@@ -26,10 +26,10 @@ INDIVIDUALS = 10
 
 print("Running ea with", ROOMS, "rooms,", PERIODS, "periods and", EXAMS, "exams")
 
-# Only use one fitness function
-creator.create("FitnessMax", base.Fitness, weights=tuple([1.0] * 12))
-# Set the type of individuals to numpy arrays
-creator.create("Individual", list, fitness=creator.FitnessMax)
+# Use 12 fitness functions with equal weight
+creator.create("FitnessMin", base.Fitness, weights=tuple([-1.0] * 12))
+# Set the type of individuals to lists
+creator.create("Individual", list, fitness=creator.FitnessMin)
 
 # Use the toolbox to initialize the individuals
 toolbox = base.Toolbox()

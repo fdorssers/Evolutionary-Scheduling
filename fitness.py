@@ -30,7 +30,16 @@ def conflict_constraint(individual, period_constraints):
 
     Two conflicting exams in the same period.
     """
-    return MUCH
+    exam_coincidence_filter = lambda x: x.constraint == " EXAM_COINCIDENCE"
+    exam_coincidence_constraints = list(filter(exam_coincidence_filter, period_constraints))
+    violations = 0
+    for exam_coincidence_constraint in exam_coincidence_constraints:
+        first_exam = individual[exam_coincidence_constraint.first]
+        second_exam = individual[exam_coincidence_constraint.second]
+        violations += first_exam[1] == second_exam[1]
+    if violations > 0:
+        print(violations)
+    return violations
 
 
 def room_occupancy_constraint(individual, room_constraints):
