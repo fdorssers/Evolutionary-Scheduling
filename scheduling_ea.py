@@ -5,7 +5,7 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
-import schedule_parser as parser
+import schedule_parser_2 as parser
 import fitness
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
