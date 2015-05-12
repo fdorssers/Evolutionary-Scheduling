@@ -14,7 +14,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     period_related_fitness = period_related_constraint(schedule, period_constraints)
     room_related_fitness = room_related_constraint(schedule, room_constraints)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
-    two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule)
+    two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     period_spread_fitness = period_spread_constraint(schedule, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
@@ -87,39 +87,55 @@ def room_related_constraint(schedule, room_constraints):
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
 
 
-def two_exams_in_a_row_constraint(schedule, periods, exams):
-    """Returns penalty
-
-    Count the number of occurrences where two examinations are taken by students straight after one another i.e. back to back. Once this has been established, the number of students involved in each occurance should be added and multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
-    """
-    # Get mapping from periods to exam in that period
+def get_period_to_exam_mapping(schedule, exams):
     period_to_exam = dict()
     for exam_i, (_, period_i) in enumerate(schedule):
         if period_i in period_to_exam:
             period_to_exam[period_i].append(exams[exam_i])
         else:
             period_to_exam[period_i] = [exams[exam_i]]
-    # Count number of occurrences that students have two exams in a row
-    used_periods = sorted(list(set(period_to_exam.keys())))
+    return period_to_exam
+
+
+def student_intersection(exams1, exams2):
+    f_get_students = lambda x: x.students
+    first_students = map(f_get_students, exams1)
+    second_students = map(f_get_students, exams2)
+    first_students = set([item for sublist in first_students for item in sublist])
+    second_students = set([item for sublist in second_students for item in sublist])
+    return first_students & second_students
+
+
+def two_exams_in_a_row_constraint(schedule, periods, exams):
+    """Returns penalty
+
+    Count the number of occurrences where two examinations are taken by students straight after one another i.e. back to back. Once this has been established, the number of students involved in each occurance should be added and multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
+    """
+    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    periods_idx = range(len(periods))
     violations = 0
-    for first_period, second_period in zip(used_periods[:-1], used_periods[1:]):
-        if periods[first_period].date == periods[second_period].date:
-            f_get_students = lambda x: x.students
-            first_students = map(f_get_students, period_to_exam[first_period])
-            second_students = map(f_get_students, period_to_exam[second_period])
-            first_students = set([item for sublist in first_students for item in sublist])
-            second_students = set([item for sublist in second_students for item in sublist])
-            intersect = first_students & second_students
+    for first_period, second_period in zip(periods_idx[:-1], periods_idx[1:]):
+        if first_period in period_to_exam and second_period in period_to_exam \
+                and periods[first_period].date == periods[second_period].date:
+            intersect = student_intersection(period_to_exam[first_period], period_to_exam[second_period])
             violations += len(intersect)
     return violations
 
 
-def two_exams_in_a_day_constraint(schedule):
+def two_exams_in_a_day_constraint(schedule, periods, exams):
     """Returns penalty
 
     In the case where there are three periods or more in a day, count the number of occurrences of students having two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a day' weighting provided within the 'Institutional Model Index'.
     """
-    return MUCH
+    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    used_periods = range(len(periods))
+    violations = 0
+    for first_period in range(len(periods)):
+        for second_period in range(first_period+2, len(periods)):
+            if periods[first_period].date == periods[second_period].date:
+                intersect = student_intersection(period_to_exam[first_period], period_to_exam[second_period])
+                violations += len(intersect)
+    return violations
 
 
 def period_spread_constraint(schedule, institutional_constraints):
