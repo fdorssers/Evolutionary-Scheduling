@@ -42,7 +42,7 @@ def parse():
         rooms = parse_data(lines, indices[ROOM_HEADER], indices[PERIOD_CONSTRAINTS_HEADER], lambda x: Room(int(x[0]), int(x[1])))
         period_constraints = parse_constraint(lines, indices[PERIOD_CONSTRAINTS_HEADER], indices[ROOM_CONSTRAINTS_HEADER], lambda x: PeriodHardConstraint(PeriodHardEnum.fromstring(x[1]), int(x[0]), int(x[2])), PeriodHardEnum)
         room_constraints = parse_constraint(lines, indices[ROOM_CONSTRAINTS_HEADER], indices[INSTITUTIONAL_CONSTRAINTS_HEADER], lambda x: RoomHardConstraint(RoomHardEnum.fromstring(x[1]), int(x[0])), RoomHardEnum)
-        institutional_constraints = parse_constraint(lines, indices[INSTITUTIONAL_CONSTRAINTS_HEADER], len(lines), lambda x: InstitutionalConstraint(InstitutionalEnum.fromstring(x[0]), list(map(int, x[1:]))), InstitutionalEnum)
+        institutional_constraints = parse_constraint(lines, indices[INSTITUTIONAL_CONSTRAINTS_HEADER], len(lines), lambda x: InstitutionalConstraint(InstitutionalEnum.fromstring(x[0]), [int(i) for i in x[1:]]), InstitutionalEnum)
         return exams, periods, rooms, period_constraints, room_constraints, institutional_constraints
 
 
