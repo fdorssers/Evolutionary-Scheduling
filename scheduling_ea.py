@@ -23,7 +23,7 @@ exams, periods, rooms, period_constraints, room_constraints, institutional_const
 ROOMS = len(rooms)
 PERIODS = len(periods)
 EXAMS = len(exams)
-INDIVIDUALS = 10
+INDIVIDUALS = 300
 
 print("Running ea with", ROOMS, "rooms,", PERIODS, "periods and", EXAMS, "exams")
 
@@ -57,7 +57,7 @@ def main():
     random.seed(64)
 
     # Create population with fixed size
-    pop = toolbox.population(n=300)
+    pop = toolbox.population(n=INDIVIDUALS)
 
     # Numpy equality function (operators.eq) between two arrays returns the
     # equality element wise, which raises an exception in the if similar()
