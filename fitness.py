@@ -1,5 +1,8 @@
 import functools
+from threading import Thread
+from time import sleep
 from periodhardconstraint import PeriodHardEnum
+from roomhardconstraint import RoomHardEnum
 
 MUCH = 1000
 
@@ -9,7 +12,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     Calculate the fitness of the schedule
     """
     conflict_fitness = conflict_constraint(schedule, period_constraints)
-    room_occupancy_fitness = room_occupancy_constraint(schedule, room_constraints)
+    room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
     period_related_fitness = period_related_constraint(schedule, period_constraints)
     room_related_fitness = room_related_constraint(schedule, room_constraints)
@@ -42,12 +45,26 @@ def conflict_constraint(schedule, period_constraints):
     return violations
 
 
-def room_occupancy_constraint(schedule, room_constraints):
+def room_occupancy_constraint(schedule, exams, rooms):
     """Returns penalty
 
     More seating required in any schedule period than that available.
     """
-    return MUCH
+    violations = 0
+    # Get mapping from room&period to ammount of students
+    room_to_period_to_students = dict()
+    for exam_i, (room, period) in enumerate(schedule):
+        if room in room_to_period_to_students:
+            if period in room_to_period_to_students[room]:
+                room_to_period_to_students[room][period] += len(exams[exam_i].students)
+            else:
+                room_to_period_to_students[room][period] = len(exams[exam_i].students)
+        else:
+            room_to_period_to_students[room] = dict(period=len(exams[exam_i].students))
+    for room_i, room_dict in room_to_period_to_students.items():
+        for students in room_dict.values():
+            violations += max(0, - rooms[room_i].capacity + students)
+    return violations
 
 
 def period_utilisation_constraint(schedule, exams, periods):
@@ -81,7 +98,13 @@ def room_related_constraint(schedule, room_constraints):
 
     Room requirements not obeyed
     """
-    return MUCH
+    violations = 0
+    for constraint in room_constraints[RoomHardEnum.ROOM_EXCLUSIVE]:
+        exam = constraint.first
+        constraint_room, constraint_period = schedule[exam]
+        for exam_i, (room, period) in enumerate(schedule):
+            violations += constraint_room == room and constraint_period == period and exam != exam_i
+    return violations
 
 # Soft constraints
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
