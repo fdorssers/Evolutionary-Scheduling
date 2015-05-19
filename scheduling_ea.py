@@ -7,6 +7,7 @@ from deap import creator
 from deap import tools
 import schedule_parser_2 as parser
 import fitness
+import multiprocessing
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
@@ -58,6 +59,10 @@ def main():
 
     # Create population with fixed size
     pop = toolbox.population(n=INDIVIDUALS)
+
+    # Set multiprocessing pool as map
+    pool = multiprocessing.Pool()
+    toolbox.register("map", pool.map)
 
     # Numpy equality function (operators.eq) between two arrays returns the
     # equality element wise, which raises an exception in the if similar()
