@@ -143,7 +143,6 @@ def period_spread_constraint(schedule, exams, institutional_constraints):
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    # todo: correct but slow
     period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
     student_to_period = get_student_to_period_mapping(schedule, exams)
