@@ -1,6 +1,4 @@
-import functools
-from threading import Thread
-from time import sleep
+from institutionalconstraint import InstitutionalEnum
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
 
@@ -18,7 +16,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     room_related_fitness = room_related_constraint(schedule, room_constraints)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
-    period_spread_fitness = period_spread_constraint(schedule, institutional_constraints)
+    period_spread_fitness = period_spread_constraint(schedule, exams, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
@@ -109,26 +107,6 @@ def room_related_constraint(schedule, room_constraints):
 # Soft constraints
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
 
-
-def get_period_to_exam_mapping(schedule, exams):
-    period_to_exam = dict()
-    for exam_i, (_, period_i) in enumerate(schedule):
-        if period_i in period_to_exam:
-            period_to_exam[period_i].append(exams[exam_i])
-        else:
-            period_to_exam[period_i] = [exams[exam_i]]
-    return period_to_exam
-
-
-def student_intersection(exams1, exams2):
-    f_get_students = lambda x: x.students
-    first_students = map(f_get_students, exams1)
-    second_students = map(f_get_students, exams2)
-    first_students = set([item for sublist in first_students for item in sublist])
-    second_students = set([item for sublist in second_students for item in sublist])
-    return first_students & second_students
-
-
 def two_exams_in_a_row_constraint(schedule, periods, exams):
     """Returns penalty
 
@@ -151,7 +129,6 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
     In the case where there are three periods or more in a day, count the number of occurrences of students having two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a day' weighting provided within the 'Institutional Model Index'.
     """
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
-    used_periods = range(len(periods))
     violations = 0
     for first_period in range(len(periods)):
         for second_period in range(first_period+2, len(periods)):
@@ -161,12 +138,25 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
     return violations
 
 
-def period_spread_constraint(schedule, institutional_constraints):
+def period_spread_constraint(schedule, exams, institutional_constraints):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    return MUCH
+    # todo: correct but slow
+    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
+    student_to_period = get_student_to_period_mapping(schedule, exams)
+    violations = 0
+    for period_length in period_lengths:
+        for student, periods in student_to_period.items():
+            periods = sorted(periods)
+            for period_i, period in enumerate(periods):
+                period_j = period_i + 1
+                while len(periods) > period_j and periods[period_j] <= (period + period_length):
+                    period_j += 1
+                    violations += 1
+    return violations
 
 
 def mixed_duration_constraint(schedule):
@@ -199,3 +189,36 @@ def period_penalty_constraint(schedule, institutional_constraints):
     It is often the case that organisations want to keep certain period usage to a minimum. As with the 'Mixed Durations' and the 'Room Penalty' components of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period the penalty is calculated by multiplying the associated penalty by the number of times the exams timetabled within that period.
     """
     return MUCH
+
+
+# Helper functions
+
+
+def get_period_to_exam_mapping(schedule, exams):
+    period_to_exam = dict()
+    for exam_i, (_, period_i) in enumerate(schedule):
+        if period_i in period_to_exam:
+            period_to_exam[period_i].append(exams[exam_i])
+        else:
+            period_to_exam[period_i] = [exams[exam_i]]
+    return period_to_exam
+
+
+def student_intersection(exams1, exams2):
+    f_get_students = lambda x: x.students
+    first_students = map(f_get_students, exams1)
+    second_students = map(f_get_students, exams2)
+    first_students = set([item for sublist in first_students for item in sublist])
+    second_students = set([item for sublist in second_students for item in sublist])
+    return first_students & second_students
+
+
+def get_student_to_period_mapping(schedule, exams):
+    student_to_periods = dict()
+    for exam_i, (_, period_i) in enumerate(schedule):
+        for student in exams[exam_i].students:
+            if student in student_to_periods:
+                student_to_periods[student].add(period_i)
+            else:
+                student_to_periods[student] = set([period_i])
+    return student_to_periods

@@ -5,6 +5,7 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
+import time
 import schedule_parser_2 as parser
 import fitness
 import multiprocessing
@@ -25,6 +26,7 @@ ROOMS = len(rooms)
 PERIODS = len(periods)
 EXAMS = len(exams)
 INDIVIDUALS = 300
+GENERATIONS = 100
 
 print("Running ea with", ROOMS, "rooms,", PERIODS, "periods and", EXAMS, "exams")
 
@@ -75,8 +77,10 @@ def main():
     stats.register("std", np.std)
     stats.register("min", np.min)
     stats.register("max", np.max)
+    now = time.time()
+    stats.register("time", lambda x: time.time() - now)
 
-    algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.01, ngen=40, stats=stats, halloffame=hof)
+    algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.01, ngen=GENERATIONS, stats=stats, halloffame=hof)
 
     return pop, stats, hof
 
