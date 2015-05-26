@@ -20,7 +20,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     period_spread_fitness = period_spread_constraint3(schedule, exams, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule)
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
-    room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
+    room_penalty_fitness = room_penalty_constraint(schedule, rooms)
     period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
             period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
@@ -240,12 +240,15 @@ def larger_exams_constraint(schedule, exams, periods, institutional_constraints)
     return violations
 
 
-def room_penalty_constraint(schedule, institutional_constraints):
+def room_penalty_constraint(schedule, rooms):
     """Returns penalty
 
     It is often the case that organisations want to keep certain room usage to a minimum. As with the 'Mixed Durations' component of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period, if a room used within the solution has an associated penalty, the penalty for that room for that period is calculated by multiplying the associated penalty by the number of times the room is used.
     """
-    return MUCH
+    violations = 0
+    for room, _ in schedule:
+        violations += rooms[room].penalty
+    return violations
 
 
 def period_penalty_constraint(schedule, institutional_constraints):
@@ -268,6 +271,15 @@ def get_period_to_exam_mapping(schedule, exams):
             period_to_exam[period_i] = [exams[exam_i]]
     return period_to_exam
 
+
+def get_room_to_exam_mapping(schedule, exams):
+    room_to_exam = dict()
+    for exam_i, (room_i, _) in enumerate(schedule):
+        if room_i in room_to_exam:
+            room_to_exam[room_i].append(exams[exam_i])
+        else:
+            room_to_exam[room_i] = [exams[exam_i]]
+    return room_to_exam
 
 def student_intersection(exams1, exams2):
     f_get_students = lambda x: x.students
