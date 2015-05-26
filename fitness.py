@@ -240,6 +240,35 @@ def period_spread_constraint3(schedule, exams, institutional_constraints):
     return violations
 
 
+def period_spread_constraint4(schedule, exams, periods, institutional_constraints):
+    violations = 0
+    results = {i: set() for i, _ in enumerate(periods)}
+    # print(type(results))
+    for e, (r, p) in enumerate(schedule):
+        if p in results:
+            results[p] |= set(exams[e].students)
+        else:
+            results[p] = set(exams[e].students)
+
+    # print(results)
+
+    spread = institutional_constraints[InstitutionalEnum.PERIODSPREAD].values[0]
+    # print('Spread: {}'.format(spread))
+    # print('i range: {}'.format(list(range(0, len(periods) - spread + 1))))
+    for i in range(0, len(periods) - spread + 1):
+        union = results[i]
+        # print(' i: {}'.format(i))
+        # print('  j range: {}'.format(list(range(i+1, i+spread))))
+        for j in range(i+1, i+spread):
+            temp = results[j]
+            # print('    union for j {}: {}'.format(j, union))
+            # print('    temp for j {}: {}'.format(j, temp))
+            violations += len(union & temp)
+            union |= temp
+
+    return violations
+
+
 def mixed_duration_constraint(schedule, exams):
     """Returns penalty
 
