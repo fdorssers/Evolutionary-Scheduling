@@ -1,27 +1,53 @@
+import time
 from institutionalconstraint import InstitutionalEnum
 from misc import flatten
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
 
 MUCH = 1000
+times = [0.] * 13
+previous = 0.
+
+
+def timer(n, filter=0.99):
+    global previous
+    if n == 0:
+        times[0] = time.time()
+    if n > 0:
+        duration = time.time() - previous
+        times[n] = times[n] * filter + (1-filter) * duration
+    previous = time.time()
 
 
 def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints):
     """
     Calculate the fitness of the schedule
     """
+    timer(0)
     conflict_fitness = conflict_constraint(schedule, period_constraints)
+    timer(1)
     room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
+    timer(2)
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
+    timer(3)
     period_related_fitness = period_related_constraint(schedule, period_constraints)
+    timer(4)
     room_related_fitness = room_related_constraint(schedule, room_constraints)
+    timer(5)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
+    timer(6)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
+    timer(7)
     period_spread_fitness = period_spread_constraint3(schedule, exams, institutional_constraints)
+    timer(8)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
+    timer(9)
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
+    timer(10)
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
+    timer(11)
     period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
+    timer(12)
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
             period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
             period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness,
