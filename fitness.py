@@ -19,7 +19,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     period_spread_fitness = period_spread_constraint3(schedule, exams, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
-    larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
+    larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
     period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
@@ -238,12 +238,22 @@ def mixed_duration_constraint(schedule, exams):
     return violations
 
 
-def larger_exams_constraint(schedule, institutional_constraints):
+def larger_exams_constraint(schedule, exams, periods, institutional_constraints):
     """Returns penalty
 
     It is desirable that examinations with the largest numbers of students are timetabled at the beginning of the examination session.
     """
-    return MUCH
+    num_large_exams, num_large_periods, _ = institutional_constraints[InstitutionalEnum.FRONTLOAD][0].values
+    max_period = len(periods) - num_large_periods
+
+    exam_sizes = dict(map(lambda kv: (kv[0], len(kv[1].students)), exams.items()))
+    large_exams = reversed(sorted(range(len(exam_sizes)), key=lambda i: exam_sizes[i])[-num_large_exams:])
+
+    violations = 0
+    for large_exam in large_exams:
+        violations += schedule[large_exam][1] > max_period
+
+    return violations
 
 
 def room_penalty_constraint(schedule, institutional_constraints):
