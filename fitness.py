@@ -252,7 +252,7 @@ def period_spread_constraint4(schedule, exams, periods, institutional_constraint
 
     # print(results)
 
-    spread = institutional_constraints[InstitutionalEnum.PERIODSPREAD].values[0]
+    spread = institutional_constraints[InstitutionalEnum.PERIODSPREAD][0].values[0]
     # print('Spread: {}'.format(spread))
     # print('i range: {}'.format(list(range(0, len(periods) - spread + 1))))
     for i in range(0, len(periods) - spread + 1):
