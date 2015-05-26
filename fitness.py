@@ -1,8 +1,10 @@
 import time
+
 from institutionalconstraint import InstitutionalEnum
 from misc import flatten
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
+
 
 MUCH = 1000
 times = [0.] * 13
@@ -316,10 +318,7 @@ def room_penalty_constraint(schedule, rooms):
 
     It is often the case that organisations want to keep certain room usage to a minimum. As with the 'Mixed Durations' component of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period, if a room used within the solution has an associated penalty, the penalty for that room for that period is calculated by multiplying the associated penalty by the number of times the room is used.
     """
-    violations = 0
-    for room, _ in schedule:
-        violations += rooms[room].penalty
-    return violations
+    return sum([rooms[r].penalty for (r, _) in schedule])
 
 
 def period_penalty_constraint(schedule, periods):
