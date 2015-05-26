@@ -1,16 +1,20 @@
 import random
+import time
+import multiprocessing
 
 import numpy as np
 from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
-import time
-import schedule_parser_2 as parser
+
 import fitness
-import multiprocessing
+from misc import schedule2string
+import schedule_parser_2 as parser
+
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
+
 
 def mutate(individual, indpb=0.05):
     """
@@ -72,7 +76,7 @@ def main():
     # numpy.array_equal or numpy.allclose solve this issue.
     hof = tools.HallOfFame(5, similar=np.array_equal)
 
-    stats = tools.Statistics(lambda ind: ind.fitness.values)
+    stats = tools.Statistics(lambda pop: pop.fitness.values)
     stats.register("avg", np.mean)
     stats.register("std", np.std)
     stats.register("min", np.min)
@@ -80,7 +84,13 @@ def main():
     now = time.time()
     stats.register("time", lambda x: time.time() - now)
 
-    algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.01, ngen=GENERATIONS, stats=stats, halloffame=hof)
+    stats2 = tools.Statistics()
+    stats2.register("best", lambda x: "\n" + schedule2string(hof[0], ROOMS, PERIODS))
+
+    mstats = tools.MultiStatistics(fitness=stats, size=stats2)
+
+    pop, logbook = algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.1, ngen=GENERATIONS, stats=mstats,
+                                       halloffame=hof)
 
     return pop, stats, hof
 
