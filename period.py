@@ -1,5 +1,4 @@
 class Period(object):
-
     def __init__(self, date="", start="", duration=0, penalty=0):
         self.date = date
         self.start = start
@@ -7,4 +6,5 @@ class Period(object):
         self.penalty = penalty
 
     def __repr__(self):
-        return 'Period(date: {}, start: {}, duration: {}, penalty: {})'.format(self.date, self.start, self.duration, self.penalty)
+        return 'Period(date: {}, start: {}, duration: {}, penalty: {})'.format(self.date, self.start, self.duration,
+                                                                               self.penalty)

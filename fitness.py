@@ -17,7 +17,7 @@ def timer(n, filter=0.99):
         times[0] = time.time()
     if n > 0:
         duration = time.time() - previous
-        times[n] = times[n] * filter + (1-filter) * duration
+        times[n] = times[n] * filter + (1 - filter) * duration
     previous = time.time()
 
 
@@ -40,7 +40,8 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     timer(6)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     timer(7)
-    period_spread_fitness = period_spread_constraint3(schedule, exams, institutional_constraints)
+    # period_spread_constraint4 is now fastest
+    period_spread_fitness = period_spread_constraint4(schedule, exams, periods, institutional_constraints)
     timer(8)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
     timer(9)
@@ -50,10 +51,12 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     timer(11)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
     timer(12)
+    print(list(zip(range(1, 13), map(lambda x: round(x, 8), times[1:]))))
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
             period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
             period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness,
             period_penalty_fitness)
+
 
 # Hard constraints
 
@@ -133,6 +136,7 @@ def room_related_constraint(schedule, room_constraints):
             violations += constraint_room == room and constraint_period == period and exam != exam_i
     return violations
 
+
 # Soft constraints
 # After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
 
@@ -145,8 +149,8 @@ def two_exams_in_a_row_constraint(schedule, periods, exams):
     periods_idx = range(len(periods))
     violations = 0
     for first_period, second_period in zip(periods_idx[:-1], periods_idx[1:]):
-        if first_period in period_to_exam and second_period in period_to_exam \
-                and periods[first_period].date == periods[second_period].date:
+        if first_period in period_to_exam and second_period in period_to_exam and periods[first_period].date == periods[
+            second_period].date:
             intersect = student_intersection(period_to_exam[first_period], period_to_exam[second_period])
             violations += len(intersect)
     return violations
@@ -160,7 +164,7 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
     violations = 0
     for first_period in range(len(periods)):
-        for second_period in range(first_period+2, len(periods)):
+        for second_period in range(first_period + 2, len(periods)):
             if periods[first_period].date == periods[second_period].date:
                 intersect = student_intersection(period_to_exam[first_period], period_to_exam[second_period])
                 violations += len(intersect)
@@ -215,7 +219,6 @@ def period_spread_constraint2(schedule, exams, institutional_constraints):
 
 
 def period_spread_constraint3(schedule, exams, institutional_constraints):
-
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
@@ -245,28 +248,16 @@ def period_spread_constraint3(schedule, exams, institutional_constraints):
 def period_spread_constraint4(schedule, exams, periods, institutional_constraints):
     violations = 0
     results = {i: set() for i, _ in enumerate(periods)}
-    # print(type(results))
     for e, (r, p) in enumerate(schedule):
-        if p in results:
-            results[p] |= set(exams[e].students)
-        else:
-            results[p] = set(exams[e].students)
-
-    # print(results)
+        results[p].update(exams[e].students)
 
     spread = institutional_constraints[InstitutionalEnum.PERIODSPREAD][0].values[0]
-    # print('Spread: {}'.format(spread))
-    # print('i range: {}'.format(list(range(0, len(periods) - spread + 1))))
     for i in range(0, len(periods) - spread + 1):
         union = results[i]
-        # print(' i: {}'.format(i))
-        # print('  j range: {}'.format(list(range(i+1, i+spread))))
-        for j in range(i+1, i+spread):
+        for j in range(i + 1, i + spread):
             temp = results[j]
-            # print('    union for j {}: {}'.format(j, union))
-            # print('    temp for j {}: {}'.format(j, temp))
             violations += len(union & temp)
-            union |= temp
+            union.update(temp)
 
     return violations
 
@@ -350,6 +341,7 @@ def get_room_to_exam_mapping(schedule, exams):
         else:
             room_to_exam[room_i] = [exams[exam_i]]
     return room_to_exam
+
 
 def student_intersection(exams1, exams2):
     f_get_students = lambda x: x.students

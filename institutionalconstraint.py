@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class InstitutionalConstraint(object):
-
     def __init__(self, constraint="", values=[]):
         self.constraint = constraint
         self.values = values

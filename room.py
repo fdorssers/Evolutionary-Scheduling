@@ -1,5 +1,4 @@
 class Room(object):
-
     def __init__(self, capacity=0, penalty=0):
         self.capacity = capacity
         self.penalty = penalty

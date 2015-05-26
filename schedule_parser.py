@@ -45,7 +45,7 @@ def parse_period_hard_constraints(f):
     for constraint in PeriodHardEnum:
         period_hard_constraints[constraint] = []
     for line in f:
-        if(room_header in line):
+        if (room_header in line):
             return period_hard_constraints
         else:
             vals = [s.strip() for s in line.split(',')]
@@ -59,7 +59,7 @@ def parse_room_hard_constraints(f):
     institutional_header = '[InstitutionalWeightings]'
     room_hard_constraints = []
     for line in f:
-        if(institutional_header in line):
+        if (institutional_header in line):
             return room_hard_constraints
         else:
             vals = line.split(',')
@@ -70,10 +70,10 @@ def parse_institutional_constraints(f):
     institutional_constraints = []
     for line in f:
         vals = line.strip().split(',')
-        if(not vals[0]):
+        if (not vals[0]):
             return institutional_constraints
         else:
-            if(len(vals) > 2):
+            if (len(vals) > 2):
                 institutional_constraints.append(InstitutionalConstraint(vals[0], -1, list(map(int, vals[1:]))))
             else:
                 institutional_constraints.append(InstitutionalConstraint(vals[0], int(vals[1]), []))

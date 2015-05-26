@@ -1,6 +1,5 @@
 import random
 import time
-import multiprocessing
 
 import numpy as np
 from deap import algorithms
@@ -13,6 +12,7 @@ from misc import schedule2string
 import schedule_parser_2 as parser
 
 
+
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
@@ -21,7 +21,7 @@ def mutate(individual, indpb=0.05):
     Mutate the schedule
     """
     for i in range(0, len(individual)):
-        individual[i] = (random.randint(0, ROOMS-1), (individual[i][1] + random.randint(-2, 2)) % PERIODS)
+        individual[i] = (random.randint(0, ROOMS - 1), (individual[i][1] + random.randint(-2, 2)) % PERIODS)
     return individual,
 
 
@@ -42,7 +42,7 @@ creator.create("Individual", list, fitness=creator.FitnessMin)
 # Use the toolbox to initialize the individuals
 toolbox = base.Toolbox()
 # Attributes to generate random rooms and periods
-toolbox.register("attr_exam", lambda: (random.randint(0, ROOMS-1), random.randint(0, PERIODS-1)))
+toolbox.register("attr_exam", lambda: (random.randint(0, ROOMS - 1), random.randint(0, PERIODS - 1)))
 # Create the individual with alternating rooms and periods
 toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_exam, n=EXAMS)
 # Create the population as a list of the individuals
@@ -67,8 +67,8 @@ def main():
     pop = toolbox.population(n=INDIVIDUALS)
 
     # Set multiprocessing pool as map
-    pool = multiprocessing.Pool()
-    toolbox.register("map", pool.map)
+    # pool = multiprocessing.Pool()
+    # toolbox.register("map", pool.map)
 
     # Numpy equality function (operators.eq) between two arrays returns the
     # equality element wise, which raises an exception in the if similar()
