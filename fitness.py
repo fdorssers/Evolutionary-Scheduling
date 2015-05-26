@@ -17,7 +17,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     period_spread_fitness = period_spread_constraint(schedule, exams, institutional_constraints)
-    mixed_duration_fitness = mixed_duration_constraint(schedule, exams, rooms)
+    mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
     period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
