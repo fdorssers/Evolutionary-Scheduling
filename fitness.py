@@ -17,7 +17,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     period_spread_fitness = period_spread_constraint(schedule, exams, institutional_constraints)
-    mixed_duration_fitness = mixed_duration_constraint(schedule)
+    mixed_duration_fitness = mixed_duration_constraint(schedule, exams, rooms)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
     period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
@@ -158,12 +158,28 @@ def period_spread_constraint(schedule, exams, institutional_constraints):
     return violations
 
 
-def mixed_duration_constraint(schedule):
+def mixed_duration_constraint(schedule, exams):
     """Returns penalty
 
     This applies a penalty to a ROOM and PERIOD (not Exam) where there are mixed durations.
     """
-    return MUCH
+    violations = 0
+    result_dict = dict()
+    # Create a mapping of rooms to periods to exams {room : {period : [i]}}
+    for i, (r, p) in enumerate(schedule):
+        if p in result_dict:
+            if r in result_dict[p]:
+                result_dict[p][r].append(i)
+            else:
+                result_dict[p][r] = [i]
+        else:
+            result_dict[p] = {r: [i]}
+
+    for p, r_dict in result_dict.items():
+        for r, i_list in result_dict[p].items():
+            violations += len({exams[i].duration for i in i_list}) - 1
+
+    return violations
 
 
 def larger_exams_constraint(schedule, institutional_constraints):
