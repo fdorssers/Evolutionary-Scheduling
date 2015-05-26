@@ -1,4 +1,5 @@
 from institutionalconstraint import InstitutionalEnum
+from misc import flatten
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
 
@@ -16,7 +17,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     room_related_fitness = room_related_constraint(schedule, room_constraints)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
-    period_spread_fitness = period_spread_constraint(schedule, exams, institutional_constraints)
+    period_spread_fitness = period_spread_constraint3(schedule, exams, institutional_constraints)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
     larger_exams_fitness = larger_exams_constraint(schedule, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
@@ -158,6 +159,61 @@ def period_spread_constraint(schedule, exams, institutional_constraints):
     return violations
 
 
+def period_spread_constraint2(schedule, exams, institutional_constraints):
+    """Returns penalty
+
+    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
+    """
+    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
+    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_students = dict()
+    for period, exams in period_to_exam.items():
+        period_to_students[period] = set(flatten(map(lambda exam: exam.students, exams)))
+    periods = sorted(period_to_students.keys())
+    violations = 0
+    for period_length in period_lengths:
+        for period_start in periods:
+            for period_step in range(0, period_length - 1):
+                period = period_start + period_step
+                if period in period_to_students:
+                    students_in_period = period_to_students[period]
+                    other_periods = range(period + 1, period_start + period_length)
+                    f_get_students = lambda p: period_to_students[p] if p in period_to_students else []
+                    students_in_other_periods = set(flatten(map(f_get_students, other_periods)))
+                    intersect = students_in_period & students_in_other_periods
+                    violations += len(intersect)
+    return violations
+
+
+def period_spread_constraint3(schedule, exams, institutional_constraints):
+
+    """Returns penalty
+
+    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
+    """
+    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
+    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_students = dict()
+    for period, exams in period_to_exam.items():
+        period_to_students[period] = set(flatten(map(lambda exam: exam.students, exams)))
+    periods = sorted(period_to_students.keys())
+    violations = 0
+    for period_length in period_lengths:
+        for period_start in periods:
+            cum_union = set()
+            for window in range(period_start + period_length, period_start + 1, -1):
+                period = period_start + window
+                if period in period_to_students:
+                    cum_union = cum_union | period_to_students[period]
+                if (period - 1) in period_to_students:
+                    students_in_period = period_to_students[period - 1]
+                    intersect = students_in_period & cum_union
+                    violations += len(intersect)
+    return violations
+
+
 def mixed_duration_constraint(schedule, exams):
     """Returns penalty
 
@@ -235,5 +291,5 @@ def get_student_to_period_mapping(schedule, exams):
             if student in student_to_periods:
                 student_to_periods[student].add(period_i)
             else:
-                student_to_periods[student] = set([period_i])
+                student_to_periods[student] = {period_i}
     return student_to_periods
