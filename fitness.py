@@ -21,7 +21,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
     room_penalty_fitness = room_penalty_constraint(schedule, institutional_constraints)
-    period_penalty_fitness = period_penalty_constraint(schedule, institutional_constraints)
+    period_penalty_fitness = period_penalty_constraint(schedule, periods)
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
             period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
             period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness,
@@ -264,12 +264,12 @@ def room_penalty_constraint(schedule, institutional_constraints):
     return MUCH
 
 
-def period_penalty_constraint(schedule, institutional_constraints):
+def period_penalty_constraint(schedule, periods):
     """Returns penalty
 
     It is often the case that organisations want to keep certain period usage to a minimum. As with the 'Mixed Durations' and the 'Room Penalty' components of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period the penalty is calculated by multiplying the associated penalty by the number of times the exams timetabled within that period.
     """
-    return MUCH
+    return sum([periods[p].penalty for (_, p) in schedule])
 
 
 # Helper functions
