@@ -116,10 +116,11 @@ class SchedulingEA(threading.Thread):
     def save(self):
         def pickle_save(data, folder):
             create_dictionary(folder)
-            f = open(folder + str(self.name), 'wb')
+            f = open(folder + filename + ".bin", 'wb')
             pickle.dump(data, f)
             f.close()
 
+        filename = str(self.name).replace(" ", "_")
         raw_folder = "logbook/raw/"
         show_folder = "logbook/show/"
         complete_pop_folder = "pop/complete/"
@@ -130,6 +131,6 @@ class SchedulingEA(threading.Thread):
         pickle_save(self.hof, hof_pop_folder)
         # txt
         create_dictionary(show_folder)
-        f = open(show_folder + str(self.name), 'w')
+        f = open(show_folder + filename + ".txt", 'w')
         f.write(str(self.logbook))
         f.close()
