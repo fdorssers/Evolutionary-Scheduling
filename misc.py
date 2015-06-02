@@ -1,7 +1,10 @@
+from threading import Lock
 import numpy as np
+import os
 
 __author__ = 'pieter'
 
+lock = Lock()
 
 def flatten(list_of_lists):
     return [item for sublist in list_of_lists for item in sublist]
@@ -36,3 +39,9 @@ def schedule2string(schedule, max_rooms, max_periods):
                 ret += " " * column_size + " | "
         ret += "\n"
     return ret
+
+
+def create_dictionary(dir):
+    with lock:
+        if not os.path.exists(dir):
+            os.makedirs(dir)

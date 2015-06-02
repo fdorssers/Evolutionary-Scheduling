@@ -82,3 +82,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# dirs
+logbook/
+pop/
