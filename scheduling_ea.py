@@ -17,6 +17,8 @@ from misc import schedule2string, create_dictionary
 
 
 
+
+
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
@@ -114,8 +116,10 @@ class SchedulingEA(threading.Thread):
         Mutate the schedule
         """
         for i in range(0, len(individual)):
-            individual[i] = (
-                random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods)
+            if random.random() < indpb:
+                individual[i] = (
+                random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
+                )
         return individual,
 
     def save(self):
