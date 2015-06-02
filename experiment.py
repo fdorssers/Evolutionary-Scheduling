@@ -1,17 +1,21 @@
 import random
+import sys
 from scheduling_ea import SchedulingEA
 import schedule_parser_2 as parser
 
 __author__ = 'pieter'
 
 
-def main():
+def main(individuals=50, generations=100):
+    # Parse possible commandline arguments
+    individuals = int(individuals)
+    generations = int(generations)
+    
     random.seed(64)
     info = parser.parse()
 
-    for indi in [50]:
-        ea2 = SchedulingEA(*info, name="ea_initial_" + str(indi), individuals=indi, generations=500)
-        ea2.start()
+    ea2 = SchedulingEA(*info, name="ea_initial_" + str(individuals), individuals=individuals, generations=generations)
+    ea2.start()
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:])
