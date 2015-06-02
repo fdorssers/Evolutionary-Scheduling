@@ -1,27 +1,25 @@
-import json
 import multiprocessing
 import pickle
 import random
 import threading
-import time
 
 from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
 import numpy as np
-import schedule_parser_2 as parser
 
 import fitness
 from misc import schedule2string, create_dictionary
+
 
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
 class SchedulingEA(threading.Thread):
-    def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints,
-                 name, individuals, generations, indpb=0.05, tournsize=3):
+    def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
+                 individuals, generations, indpb=0.05, tournsize=3):
         super().__init__()
         self.exams = exams
         self.periods = periods
@@ -55,25 +53,25 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-1.0] * 12))
+        creator.create(self.fitness_name, base.Fitness, weights=tuple([-1000.0] * 5 + [-1] * 8))
         creator.create(self.individual_name, list, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
-
         # Use the self.toolbox to initialize the individuals
         self.toolbox = base.Toolbox()
         # Attributes to generate random rooms and periods
         self.toolbox.register("attr_exam",
                               lambda: (random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)))
         # Create the individual with alternating rooms and periods
-        self.toolbox.register("individual", tools.initRepeat, getattr(creator, self.individual_name), self.toolbox.attr_exam,
-                              n=self.num_exams)
+        self.toolbox.register("individual", tools.initRepeat, getattr(creator, self.individual_name),
+                              self.toolbox.attr_exam, n=self.num_exams)
         # Create the population as a list of the individuals
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
         # Use the fitness function specified in this file
-        self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods, rooms=self.rooms,
-                              period_constraints=self.period_constraints, room_constraints=self.room_constraints,
+        self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods,
+                              rooms=self.rooms, period_constraints=self.period_constraints,
+                              room_constraints=self.room_constraints,
                               institutional_constraints=self.institutional_constraints)
         # Use two point cross over
         self.toolbox.register("mate", tools.cxTwoPoint)
@@ -87,7 +85,7 @@ class SchedulingEA(threading.Thread):
         self.hof = tools.HallOfFame(5, similar=np.array_equal)
 
     def init_stats(self):
-        stats = tools.Statistics(lambda pop: pop.fitness.values)
+        stats = tools.Statistics(lambda pop: pop.fitness.wvalues)
         stats.register("name", lambda x: self.name)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
@@ -110,7 +108,7 @@ class SchedulingEA(threading.Thread):
         """
         for i in range(0, len(individual)):
             individual[i] = (
-            random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods)
+                random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods)
         return individual,
 
     def save(self):
@@ -125,6 +123,7 @@ class SchedulingEA(threading.Thread):
         show_folder = "logbook/show/"
         complete_pop_folder = "pop/complete/"
         hof_pop_folder = "pop/hof/"
+        show_pop_folder = "pop/show/"
         # binaries
         pickle_save(self.logbook, raw_folder)
         pickle_save(self.pop, complete_pop_folder)
@@ -133,4 +132,15 @@ class SchedulingEA(threading.Thread):
         create_dictionary(show_folder)
         f = open(show_folder + filename + ".txt", 'w')
         f.write(str(self.logbook))
+        f.close()
+
+        create_dictionary(show_pop_folder)
+        f = open(show_pop_folder + filename + ".txt", 'w')
+        pop = sorted(self.pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
+        for i, ind in enumerate(pop):
+            fitt_comp = "(" + ") + (".join(
+                map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
+            f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
+            f.write(schedule2string(ind, self.num_rooms, self.num_periods))
+            f.write("===\n\n")
         f.close()
