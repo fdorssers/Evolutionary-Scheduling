@@ -9,8 +9,8 @@ def main():
     random.seed(64)
     info = parser.parse()
 
-    for indi in [5000]:
-        ea2 = SchedulingEA(*info, name="ea_initial_" + str(indi), individuals=indi, generations=10000)
+    for indi in [50]:
+        ea2 = SchedulingEA(*info, name="ea_initial_" + str(indi), individuals=indi, generations=500)
         ea2.start()
 
 if __name__ == "__main__":
