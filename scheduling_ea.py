@@ -10,7 +10,10 @@ from deap import algorithms
 import numpy as np
 
 import fitness
+from institutionalconstraint import InstitutionalEnum
 from misc import schedule2string, create_dictionary
+
+
 
 
 
@@ -24,9 +27,9 @@ class SchedulingEA(threading.Thread):
         self.exams = exams
         self.periods = periods
         self.rooms = rooms
-        self.period_constraints = period_constraints
-        self.room_constraints = room_constraints
-        self.institutional_constraints = institutional_constraints
+        self.period_con = period_constraints
+        self.room_con = room_constraints
+        self.institutional_con = institutional_constraints
         self.name = name
         self.individuals = individuals
         self.generations = generations
@@ -53,7 +56,12 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-1000.0] * 5 + [-1] * 8))
+        soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW],
+                           -self.institutional_con[InstitutionalEnum.TWOINADAY],
+                           -self.institutional_con[InstitutionalEnum.PERIODSPREAD],
+                           -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS],
+                           -self.institutional_con[InstitutionalEnum.FRONTLOAD], -1, -1]
+        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
         creator.create(self.individual_name, list, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
@@ -70,9 +78,8 @@ class SchedulingEA(threading.Thread):
 
         # Use the fitness function specified in this file
         self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods,
-                              rooms=self.rooms, period_constraints=self.period_constraints,
-                              room_constraints=self.room_constraints,
-                              institutional_constraints=self.institutional_constraints)
+                              rooms=self.rooms, period_constraints=self.period_con, room_constraints=self.room_con,
+                              institutional_constraints=self.institutional_con)
         # Use two point cross over
         self.toolbox.register("mate", tools.cxTwoPoint)
         # Use the mutation operator specified in this file
