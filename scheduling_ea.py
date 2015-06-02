@@ -56,11 +56,11 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW],
-                           -self.institutional_con[InstitutionalEnum.TWOINADAY],
-                           -self.institutional_con[InstitutionalEnum.PERIODSPREAD],
-                           -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS],
-                           -self.institutional_con[InstitutionalEnum.FRONTLOAD], -1, -1]
+        soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
+                           -self.institutional_con[InstitutionalEnum.TWOINADAY][0].values[0],
+                           -self.institutional_con[InstitutionalEnum.PERIODSPREAD][0].values[0],
+                           -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
+                           -self.institutional_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
         creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
         creator.create(self.individual_name, list, fitness=getattr(creator, self.fitness_name))
 
