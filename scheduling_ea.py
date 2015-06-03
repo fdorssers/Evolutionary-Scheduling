@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 import fitness
 from institutionalconstraint import InstitutionalEnum
-from misc import schedule2string, create_dictionary
+from misc import schedule2string, create_dictionary, plot_ea_progress
 
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
@@ -70,7 +70,7 @@ class SchedulingEA(threading.Thread):
                                  "indpb":self.indpb, "mutbp":self.mutpb, "tournsize":self.tournsize}}
 
     def __str__(self):
-        return json.dumps(self.jsonify())
+        return json.dumps(self.jsonify(), sort_keys=True)
 
     def init_create_types(self):
         soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
@@ -146,6 +146,32 @@ class SchedulingEA(threading.Thread):
             pickle.dump(data, f)
             f.close()
 
+        def save_str(object, folder, extension=None):
+            create_dictionary(folder)
+            extension = "txt" if extension is None else extension
+            f = open(folder + filename + '.' + extension, 'w')
+            f.write(str(object))
+            f.close()
+
+        def save_readable_population(pop, num_rooms, num_periods):
+            create_dictionary(show_pop_folder)
+            f = open(show_pop_folder + filename + ".txt", 'w')
+            pop = sorted(pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
+            for i, ind in enumerate(pop):
+                fitt_comp = "(" + ") + (".join(
+                    map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
+                f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
+                f.write(schedule2string(ind, num_rooms, num_periods))
+                f.write("===\n\n")
+            f.close()
+
+        def plot_progress(logbook, parameters):
+            create_dictionary(plot_pop_folder)
+            parameter_str = ", ".join([str(k) + '$=' + str(parameters[k]) + '$' for k in sorted(parameters)])
+            plot_ea_progress(logbook, parameter_str)
+            plt.savefig(plot_pop_folder + filename)
+
+        # Folders and filename
         filename = str(self.name).replace(" ", "_")
         raw_folder = "logbook/raw/"
         show_folder = "logbook/show/"
@@ -154,43 +180,12 @@ class SchedulingEA(threading.Thread):
         hof_pop_folder = "pop/hof/"
         show_pop_folder = "pop/show/"
         plot_pop_folder = "pop/plot/"
-        # binaries
+
+        # Save
         pickle_save(self.logbook, raw_folder)
         pickle_save(self.pop, complete_pop_folder)
         pickle_save(self.hof, hof_pop_folder)
-        # logbook
-        create_dictionary(show_folder)
-        f = open(show_folder + filename + ".txt", 'w')
-        f.write(str(self.logbook))
-        f.close()
-        # Readable schedules
-        create_dictionary(show_pop_folder)
-        f = open(show_pop_folder + filename + ".txt", 'w')
-        pop = sorted(self.pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
-        for i, ind in enumerate(pop):
-            fitt_comp = "(" + ") + (".join(
-                map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
-            f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
-            f.write(schedule2string(ind, self.num_rooms, self.num_periods))
-            f.write("===\n\n")
-        f.close()
-        # Settings
-        create_dictionary(info_folder)
-        f = open(info_folder + filename + ".json", 'w')
-        f.write(str(self))
-        f.close()
-        # progress
-        create_dictionary(plot_pop_folder)
-        duration, best, worst, average = self.logbook.select("duration", "best", "worst", "avg")
-        plt.plot(duration, best)
-        plt.plot(duration, worst)
-        plt.plot(duration, average)
-        plt.xlabel("Generation")
-        plt.ylabel("Fitness")
-        plt.suptitle("Fitness vs. duration")
-        plt.title(", ".join(map(lambda kv: "{}={}".format(*kv), self.jsonify()["ea"].items())))
-        plt.legend(["best", "worst", "average"])
-        num_xs = min(len(duration), 15)
-        xs = np.round(np.linspace(0, len(duration)-1, num_xs)).astype(np.int).tolist()
-        plt.xticks([duration[x] for x in xs], xs)
-        plt.savefig(plot_pop_folder + filename)
+        save_str(self.logbook, show_folder)
+        save_str(str(self), info_folder, 'json')
+        save_readable_population(self.pop, self.num_rooms, self.num_periods)
+        plot_progress(self.logbook, self.jsonify()["ea"])

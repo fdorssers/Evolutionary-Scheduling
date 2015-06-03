@@ -1,6 +1,7 @@
 from threading import Lock
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 
 __author__ = 'pieter'
 
@@ -45,3 +46,18 @@ def create_dictionary(dir):
     with lock:
         if not os.path.exists(dir):
             os.makedirs(dir)
+
+
+def plot_ea_progress(logbook, parameter_str):
+    duration, best, worst, average = logbook.select("duration", "best", "worst", "avg")
+    plt.plot(duration, best)
+    plt.plot(duration, worst)
+    plt.plot(duration, average)
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.suptitle("Fitness vs. duration")
+    plt.title(parameter_str)
+    plt.legend(["best", "worst", "average"])
+    num_xs = min(len(duration), 15)
+    xs = np.round(np.linspace(0, len(duration)-1, num_xs)).astype(np.int).tolist()
+    plt.xticks([duration[x] for x in xs], xs)
