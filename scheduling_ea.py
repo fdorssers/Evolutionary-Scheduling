@@ -19,28 +19,33 @@ from misc import schedule2string, create_dictionary
 
 
 
+
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
 class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
-                 individuals, generations, indpb=0.05, tournsize=3):
+                 individuals, generations, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
         super().__init__()
+        # Problem properties
         self.exams = exams
         self.periods = periods
         self.rooms = rooms
         self.period_con = period_constraints
         self.room_con = room_constraints
         self.institutional_con = institutional_constraints
-        self.name = name
+        self.num_rooms = len(rooms)
+        self.num_periods = len(periods)
+        self.num_exams = len(exams)
+        # EA properties
         self.individuals = individuals
         self.generations = generations
         self.indpb = indpb
         self.tournsize = tournsize
-        self.num_rooms = len(rooms)
-        self.num_periods = len(periods)
-        self.num_exams = len(exams)
+        self.cxpb = cxpb
+        self.mutpb = mutpb
 
+        self.name = name
         self.fitness_name = "FitnessMin_" + str(self.name)
         self.individual_name = "Individual_" + str(self.name)
         self.toolbox = None
@@ -107,8 +112,8 @@ class SchedulingEA(threading.Thread):
         self.stats = stats
 
     def run(self):
-        self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=0.5, mutpb=0.1, ngen=self.generations,
-                                                     stats=self.stats, halloffame=self.hof)
+        self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
+                                                     ngen=self.generations, stats=self.stats, halloffame=self.hof)
         self.save()
 
     def mutate(self, individual, indpb=0.05):
@@ -118,7 +123,7 @@ class SchedulingEA(threading.Thread):
         for i in range(0, len(individual)):
             if random.random() < indpb:
                 individual[i] = (
-                random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
+                    random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
                 )
         return individual,
 
