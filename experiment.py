@@ -16,7 +16,7 @@ def main(individuals=50, generations=100, crossover_pb=0.5, mutation_pb=0.1):
         try:
             return [type(param)]
         except ValueError:
-            return map(type, param.split(","))
+            return list(map(type, param.split(",")))
 
     individuals = parse_list_or_number(individuals, int)
     generations = parse_list_or_number(generations, int)
