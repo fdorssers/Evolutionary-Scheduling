@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 
 from scheduling_ea import SchedulingEA
 import schedule_parser_2 as parser
@@ -29,7 +30,8 @@ def main(individuals=50, generations=100, crossover_pb=0.5, mutation_pb=0.1):
         for num_generations in generations:
             for cxpb in crossover_pb:
                 for mutpb in mutation_pb:
-                    ea_name = "ea_initial_{}_{}_{}_{}".format(num_individual, num_generations, cxpb, mutpb)
+                    rand = round(time.time() * 1000)
+                    ea_name = "ea_initial_{}".format(rand)
                     print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
                           "probability".format(ea_name, num_individual, num_generations, cxpb, mutpb))
                     ea2 = SchedulingEA(*info, name=ea_name, individuals=num_individual, generations=num_generations,

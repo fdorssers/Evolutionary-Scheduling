@@ -8,16 +8,11 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 import numpy as np
+import json
 
 import fitness
 from institutionalconstraint import InstitutionalEnum
 from misc import schedule2string, create_dictionary
-
-
-
-
-
-
 
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
@@ -61,6 +56,13 @@ class SchedulingEA(threading.Thread):
 
         pool = multiprocessing.Pool()
         self.toolbox.register("map", pool.map)
+
+    def __str__(self):
+        return json.dumps({"problem":{"exams":self.num_exams, "periods":self.num_periods, "rooms":self.num_rooms,
+                                      "period_con":len(self.period_con), "room_con":len(self.room_con),
+                                      "institutional_con":len(self.institutional_con)},
+                           "ea":{"individuals":self.individuals, "generations":self.generations, "cxpb":self.cxpb,
+                                 "indpb":self.indpb, "mutbp":self.mutpb, "tournsize":self.tournsize}})
 
     def init_create_types(self):
         soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
@@ -137,6 +139,7 @@ class SchedulingEA(threading.Thread):
         filename = str(self.name).replace(" ", "_")
         raw_folder = "logbook/raw/"
         show_folder = "logbook/show/"
+        info_folder = "logbook/info/"
         complete_pop_folder = "pop/complete/"
         hof_pop_folder = "pop/hof/"
         show_pop_folder = "pop/show/"
@@ -159,4 +162,9 @@ class SchedulingEA(threading.Thread):
             f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
             f.write(schedule2string(ind, self.num_rooms, self.num_periods))
             f.write("===\n\n")
+        f.close()
+
+        create_dictionary(info_folder)
+        f = open(info_folder + filename + ".json", 'w')
+        f.write(str(self))
         f.close()
