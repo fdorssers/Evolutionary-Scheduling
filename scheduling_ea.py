@@ -10,6 +10,9 @@ from deap import algorithms
 import numpy as np
 import json
 import time
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import fitness
