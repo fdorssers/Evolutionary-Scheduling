@@ -53,7 +53,7 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     timer(12)
     # print(list(zip(range(1, 13), map(lambda x: round(x, 8), times[1:]))))
     return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
-            period_utilisation_fitness, room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
+            room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
             period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness,
             period_penalty_fitness)
 
