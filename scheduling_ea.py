@@ -190,5 +190,7 @@ class SchedulingEA(threading.Thread):
         plt.suptitle("Fitness vs. duration")
         plt.title(", ".join(map(lambda kv: "{}={}".format(*kv), self.jsonify()["ea"].items())))
         plt.legend(["best", "worst", "average"])
-        plt.xticks(duration, range(len(duration)))
+        num_xs = min(len(duration), 15)
+        xs = np.round(np.linspace(0, len(duration)-1, num_xs)).astype(np.int).tolist()
+        plt.xticks([duration[x] for x in xs], xs)
         plt.savefig(plot_pop_folder + filename)
