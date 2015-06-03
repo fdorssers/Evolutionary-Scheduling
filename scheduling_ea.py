@@ -9,6 +9,8 @@ from deap import tools
 from deap import algorithms
 import numpy as np
 import json
+import time
+import matplotlib.pyplot as plt
 
 import fitness
 from institutionalconstraint import InstitutionalEnum
@@ -20,7 +22,7 @@ from misc import schedule2string, create_dictionary
 
 class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
-                 individuals, generations, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
+                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
         super().__init__()
         # Problem properties
         self.exams = exams
@@ -33,8 +35,8 @@ class SchedulingEA(threading.Thread):
         self.num_periods = len(periods)
         self.num_exams = len(exams)
         # EA properties
-        self.individuals = individuals
-        self.generations = generations
+        self.indi = indi
+        self.gen = gen
         self.indpb = indpb
         self.tournsize = tournsize
         self.cxpb = cxpb
@@ -57,12 +59,15 @@ class SchedulingEA(threading.Thread):
         pool = multiprocessing.Pool()
         self.toolbox.register("map", pool.map)
 
-    def __str__(self):
-        return json.dumps({"problem":{"exams":self.num_exams, "periods":self.num_periods, "rooms":self.num_rooms,
+    def jsonify(self):
+        return {"problem":{"exams":self.num_exams, "periods":self.num_periods, "rooms":self.num_rooms,
                                       "period_con":len(self.period_con), "room_con":len(self.room_con),
                                       "institutional_con":len(self.institutional_con)},
-                           "ea":{"individuals":self.individuals, "generations":self.generations, "cxpb":self.cxpb,
-                                 "indpb":self.indpb, "mutbp":self.mutpb, "tournsize":self.tournsize}})
+                           "ea":{"indi":self.indi, "gen":self.gen, "cxpb":self.cxpb,
+                                 "indpb":self.indpb, "mutbp":self.mutpb, "tournsize":self.tournsize}}
+
+    def __str__(self):
+        return json.dumps(self.jsonify())
 
     def init_create_types(self):
         soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
@@ -97,16 +102,18 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
 
     def init_population(self):
-        self.pop = self.toolbox.population(n=self.individuals)
+        self.pop = self.toolbox.population(n=self.indi)
         self.hof = tools.HallOfFame(5, similar=np.array_equal)
 
     def init_stats(self):
-        stats = tools.Statistics(lambda pop: pop.fitness.wvalues)
+        stats = tools.Statistics(lambda pop: np.sum(pop.fitness.wvalues, 0))
         stats.register("name", lambda x: self.name)
         stats.register("avg", np.mean)
         stats.register("std", np.std)
-        stats.register("min", np.min)
-        stats.register("max", np.max)
+        stats.register("worst", np.min)
+        stats.register("best", np.max)
+        start = time.time()
+        stats.register("duration", lambda x: time.time() - start)
 
         # stats2 = tools.Statistics()
         # stats2.register("best", lambda x: "\n" + schedule2string(self.hof[0], self.num_rooms, self.num_periods))
@@ -115,7 +122,7 @@ class SchedulingEA(threading.Thread):
 
     def run(self):
         self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.generations, stats=self.stats, halloffame=self.hof)
+                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof)
         self.save()
 
     def mutate(self, individual, indpb=0.05):
@@ -143,16 +150,17 @@ class SchedulingEA(threading.Thread):
         complete_pop_folder = "pop/complete/"
         hof_pop_folder = "pop/hof/"
         show_pop_folder = "pop/show/"
+        plot_pop_folder = "pop/plot/"
         # binaries
         pickle_save(self.logbook, raw_folder)
         pickle_save(self.pop, complete_pop_folder)
         pickle_save(self.hof, hof_pop_folder)
-        # txt
+        # logbook
         create_dictionary(show_folder)
         f = open(show_folder + filename + ".txt", 'w')
         f.write(str(self.logbook))
         f.close()
-
+        # Readable schedules
         create_dictionary(show_pop_folder)
         f = open(show_pop_folder + filename + ".txt", 'w')
         pop = sorted(self.pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
@@ -163,8 +171,21 @@ class SchedulingEA(threading.Thread):
             f.write(schedule2string(ind, self.num_rooms, self.num_periods))
             f.write("===\n\n")
         f.close()
-
+        # Settings
         create_dictionary(info_folder)
         f = open(info_folder + filename + ".json", 'w')
         f.write(str(self))
         f.close()
+        # progress
+        create_dictionary(plot_pop_folder)
+        duration, best, worst, average = self.logbook.select("duration", "best", "worst", "avg")
+        plt.plot(duration, best)
+        plt.plot(duration, worst)
+        plt.plot(duration, average)
+        plt.xlabel("Generation")
+        plt.ylabel("Fitness")
+        plt.suptitle("Fitness vs. duration")
+        plt.title(", ".join(map(lambda kv: "{}={}".format(*kv), self.jsonify()["ea"].items())))
+        plt.legend(["best", "worst", "average"])
+        plt.xticks(duration, range(len(duration)))
+        plt.savefig(plot_pop_folder + filename)
