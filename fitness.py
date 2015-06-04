@@ -25,37 +25,23 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     """
     Calculate the fitness of the schedule
     """
-    timer(0)
     conflict_fitness = conflict_constraint(schedule, period_constraints)
-    timer(1)
     room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
-    timer(2)
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
-    timer(3)
     period_related_fitness = period_related_constraint(schedule, period_constraints)
-    timer(4)
     room_related_fitness = room_related_constraint(schedule, room_constraints)
-    timer(5)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
-    timer(6)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
-    timer(7)
     # period_spread_constraint4 is now fastest
     period_spread_fitness = period_spread_constraint4(schedule, exams, periods, institutional_constraints)
-    timer(8)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
-    timer(9)
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
-    timer(10)
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
-    timer(11)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
-    timer(12)
-    # print(list(zip(range(1, 13), map(lambda x: round(x, 8), times[1:]))))
-    return (conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
-            room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness,
-            period_spread_fitness, mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness,
-            period_penalty_fitness)
+    return (
+        conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
+        room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, period_spread_fitness,
+        mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness, period_penalty_fitness)
 
 
 # Hard constraints
@@ -138,12 +124,15 @@ def room_related_constraint(schedule, room_constraints):
 
 
 # Soft constraints
-# After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction of the soft constraints. These are the following;
+# After checking that all hard constraints are satisfied, the solution will be classified based on the satisfaction 
+# of the soft constraints. These are the following;
 
 def two_exams_in_a_row_constraint(schedule, periods, exams):
     """Returns penalty
 
-    Count the number of occurrences where two examinations are taken by students straight after one another i.e. back to back. Once this has been established, the number of students involved in each occurance should be added and multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
+    Count the number of occurrences where two examinations are taken by students straight after one another i.e. back 
+    to back. Once this has been established, the number of students involved in each occurance should be added and 
+    multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
     """
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
     periods_idx = range(len(periods))
@@ -159,7 +148,9 @@ def two_exams_in_a_row_constraint(schedule, periods, exams):
 def two_exams_in_a_day_constraint(schedule, periods, exams):
     """Returns penalty
 
-    In the case where there are three periods or more in a day, count the number of occurrences of students having two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a day' weighting provided within the 'Institutional Model Index'.
+    In the case where there are three periods or more in a day, count the number of occurrences of students having 
+    two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a 
+    day' weighting provided within the 'Institutional Model Index'.
     """
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
     violations = 0
@@ -174,7 +165,9 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
 def period_spread_constraint(schedule, exams, institutional_constraints):
     """Returns penalty
 
-    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
+    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
+    This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
+    Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
     period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
@@ -194,7 +187,9 @@ def period_spread_constraint(schedule, exams, institutional_constraints):
 def period_spread_constraint2(schedule, exams, institutional_constraints):
     """Returns penalty
 
-    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
+    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
+    This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
+    Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
     period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
@@ -221,7 +216,9 @@ def period_spread_constraint2(schedule, exams, institutional_constraints):
 def period_spread_constraint3(schedule, exams, institutional_constraints):
     """Returns penalty
 
-    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model Index', a figure is provided relating to how many periods the solution should be �optimised' over.
+    This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
+    This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
+    Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
     period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
@@ -289,7 +286,8 @@ def mixed_duration_constraint(schedule, exams):
 def larger_exams_constraint(schedule, exams, periods, institutional_constraints):
     """Returns penalty
 
-    It is desirable that examinations with the largest numbers of students are timetabled at the beginning of the examination session.
+    It is desirable that examinations with the largest numbers of students are timetabled at the beginning of the 
+    examination session.
     """
     num_large_exams, num_large_periods, _ = institutional_constraints[InstitutionalEnum.FRONTLOAD][0].values
     max_period = len(periods) - num_large_periods
@@ -307,7 +305,10 @@ def larger_exams_constraint(schedule, exams, periods, institutional_constraints)
 def room_penalty_constraint(schedule, rooms):
     """Returns penalty
 
-    It is often the case that organisations want to keep certain room usage to a minimum. As with the 'Mixed Durations' component of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period, if a room used within the solution has an associated penalty, the penalty for that room for that period is calculated by multiplying the associated penalty by the number of times the room is used.
+    It is often the case that organisations want to keep certain room usage to a minimum. As with the 'Mixed 
+    Durations' component of the overall penalty, this part of the overall penalty should be calculated on a period by 
+    period basis. For each period, if a room used within the solution has an associated penalty, the penalty for that 
+    room for that period is calculated by multiplying the associated penalty by the number of times the room is used.
     """
     return sum([rooms[r].penalty for (r, _) in schedule])
 
@@ -315,7 +316,10 @@ def room_penalty_constraint(schedule, rooms):
 def period_penalty_constraint(schedule, periods):
     """Returns penalty
 
-    It is often the case that organisations want to keep certain period usage to a minimum. As with the 'Mixed Durations' and the 'Room Penalty' components of the overall penalty, this part of the overall penalty should be calculated on a period by period basis. For each period the penalty is calculated by multiplying the associated penalty by the number of times the exams timetabled within that period.
+    It is often the case that organisations want to keep certain period usage to a minimum. As with the 'Mixed 
+    Durations' and the 'Room Penalty' components of the overall penalty, this part of the overall penalty should be 
+    calculated on a period by period basis. For each period the penalty is calculated by multiplying the associated 
+    penalty by the number of times the exams timetabled within that period.
     """
     return sum([periods[p].penalty for (_, p) in schedule])
 

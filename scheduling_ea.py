@@ -2,23 +2,23 @@ import multiprocessing
 import pickle
 import random
 import threading
+import json
+import time
 
 from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
 import numpy as np
-import json
-import time
-
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 import fitness
 from institutionalconstraint import InstitutionalEnum
 from misc import schedule2string, create_dictionary, plot_ea_progress
 
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
@@ -27,6 +27,7 @@ class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
                  indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
         super().__init__()
+
         # Problem properties
         self.exams = exams
         self.periods = periods
@@ -37,6 +38,7 @@ class SchedulingEA(threading.Thread):
         self.num_rooms = len(rooms)
         self.num_periods = len(periods)
         self.num_exams = len(exams)
+
         # EA properties
         self.indi = indi
         self.gen = gen
@@ -45,6 +47,7 @@ class SchedulingEA(threading.Thread):
         self.cxpb = cxpb
         self.mutpb = mutpb
 
+        # Constants
         self.name = name
         self.fitness_name = "FitnessMin_" + str(self.name)
         self.individual_name = "Individual_" + str(self.name)
@@ -61,16 +64,6 @@ class SchedulingEA(threading.Thread):
 
         pool = multiprocessing.Pool()
         self.toolbox.register("map", pool.map)
-
-    def jsonify(self):
-        return {"problem":{"exams":self.num_exams, "periods":self.num_periods, "rooms":self.num_rooms,
-                                      "period_con":len(self.period_con), "room_con":len(self.room_con),
-                                      "institutional_con":len(self.institutional_con)},
-                           "ea":{"indi":self.indi, "gen":self.gen, "cxpb":self.cxpb,
-                                 "indpb":self.indpb, "mutbp":self.mutpb, "tournsize":self.tournsize}}
-
-    def __str__(self):
-        return json.dumps(self.jsonify(), sort_keys=True)
 
     def init_create_types(self):
         soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
@@ -138,6 +131,16 @@ class SchedulingEA(threading.Thread):
                     random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
                 )
         return individual,
+
+    def jsonify(self):
+        return {"problem": {"exams": self.num_exams, "periods": self.num_periods, "rooms": self.num_rooms,
+                            "period_con": len(self.period_con), "room_con": len(self.room_con),
+                            "institutional_con": len(self.institutional_con)},
+                "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
+                       "tournsize": self.tournsize}}
+
+    def __str__(self):
+        return json.dumps(self.jsonify(), sort_keys=True)
 
     def save(self):
         def pickle_save(data, folder):

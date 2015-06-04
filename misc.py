@@ -1,13 +1,24 @@
 from threading import Lock
-import numpy as np
 import os
+
+import numpy as np
 import matplotlib.pyplot as plt
+
 
 __author__ = 'pieter'
 
 lock = Lock()
 
+
+
 def flatten(list_of_lists):
+    """
+    Flattens a list of lists
+    :param list_of_lists:
+    :type list_of_lists: list of list
+    :return: flattened list
+    :rtype: list
+    """
     return [item for sublist in list_of_lists for item in sublist]
 
 
@@ -59,5 +70,5 @@ def plot_ea_progress(logbook, parameter_str):
     plt.title(parameter_str)
     plt.legend(["best", "worst", "average"])
     num_xs = min(len(duration), 15)
-    xs = np.round(np.linspace(0, len(duration)-1, num_xs)).astype(np.int).tolist()
+    xs = np.round(np.linspace(0, len(duration) - 1, num_xs)).astype(np.int).tolist()
     plt.xticks([duration[x] for x in xs], xs)
