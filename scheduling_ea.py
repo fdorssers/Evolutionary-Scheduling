@@ -128,7 +128,8 @@ class SchedulingEA(threading.Thread):
         for i in range(0, len(individual)):
             if random.random() < indpb:
                 individual[i] = (
-                    random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
+                    # random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
+                    random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)
                 )
         return individual,
 
