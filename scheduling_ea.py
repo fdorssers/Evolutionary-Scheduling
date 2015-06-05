@@ -1,26 +1,21 @@
 import multiprocessing
-import os
-import pickle
 import random
 import threading
 import json
 import time
-import zipfile
 
 from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
 import numpy as np
-import matplotlib
 
 import fitness
 from institutionalconstraint import InstitutionalEnum
-from misc import schedule2string, create_dictionary, plot_ea_progress
+import meme
 
 
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+
 
 # Todo: use deap wrapper to set bounds on rooms and periods indexes
 
@@ -59,6 +54,8 @@ class SchedulingEA(threading.Thread):
         self.hof = None
         self.stats = None
 
+        self.done = False
+
         self.init_create_types()
         self.init_toolbox()
         self.init_population()
@@ -94,8 +91,10 @@ class SchedulingEA(threading.Thread):
                               institutional_constraints=self.institutional_con)
         # Use two point cross over
         self.toolbox.register("mate", tools.cxTwoPoint)
+        self.toolbox.decorate("mate", meme.mate_memes)
         # Use the mutation operator specified in this file
         self.toolbox.register("mutate", self.mutate, indpb=self.indpb)
+        self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
 
@@ -120,8 +119,8 @@ class SchedulingEA(threading.Thread):
 
     def run(self):
         self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof)
-        self.save()
+                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof, verbose=False)
+        self.done = True
 
     def mutate(self, individual, indpb=0.05):
         """
@@ -130,7 +129,8 @@ class SchedulingEA(threading.Thread):
         for i in range(0, len(individual)):
             if random.random() < indpb:
                 individual[i] = (
-                    # random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2, 2)) % self.num_periods
+                    # random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2,
+                    # 2)) % self.num_periods
                     random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)
                 )
         return individual,
@@ -144,60 +144,3 @@ class SchedulingEA(threading.Thread):
 
     def __str__(self):
         return json.dumps(self.jsonify(), sort_keys=True)
-
-    def save(self):
-
-        def write_to_zip_and_remove(path):
-            zip_file.write(path)
-            os.remove(path)
-            os.removedirs("/".join(os.path.split(path)[:-1]))
-
-        def pickle_save_zip(data, folder, file):
-            create_dictionary(folder)
-            path = os.path.join(folder, file)
-            f = open(path, 'wb')
-            pickle.dump(data, f)
-            f.close()
-            write_to_zip_and_remove(path)
-
-        def save_str(object, folder, file):
-            create_dictionary(folder)
-            path = os.path.join(folder, file)
-            f = open(path, 'w')
-            f.write(str(object))
-            f.close()
-            write_to_zip_and_remove(path)
-
-        def save_readable_population(pop, num_rooms, num_periods, folder, file):
-            create_dictionary(folder)
-            path = os.path.join(folder, file)
-            f = open(path, 'w')
-            pop = sorted(pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
-            for i, ind in enumerate(pop):
-                fitt_comp = "(" + ") + (".join(
-                    map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
-                f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
-                f.write(schedule2string(ind, num_rooms, num_periods))
-                f.write("===\n\n")
-            f.close()
-            write_to_zip_and_remove(path)
-
-        def plot_progress(logbook, parameters, folder, file):
-            create_dictionary(folder)
-            path = os.path.join(folder, file)
-            parameter_str = ", ".join([str(k) + '$=' + str(parameters[k]) + '$' for k in sorted(parameters)])
-            plot_ea_progress(logbook, parameter_str)
-            plt.savefig(path)
-            write_to_zip_and_remove(path)
-
-        # Save
-        save_dir = "logs"
-        create_dictionary(save_dir)
-        zip_file = zipfile.ZipFile("logs/" + str(self.name).replace(" ", "_") + ".zip", 'w', zipfile.ZIP_DEFLATED)
-        pickle_save_zip(self.logbook, "logbook", "raw.bin")
-        pickle_save_zip(self.pop, "pop", "complete.bin")
-        pickle_save_zip(self.hof, "pop", "hof.bin")
-        save_str(self.logbook, "logbook", "show.txt")
-        save_str(str(self), "logbook", "info.json")
-        save_readable_population(self.pop, self.num_rooms, self.num_periods, "pop", "show.txt")
-        plot_progress(self.logbook, self.jsonify()["ea"], "pop", "plot.png")

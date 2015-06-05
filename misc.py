@@ -10,7 +10,6 @@ __author__ = 'pieter'
 lock = Lock()
 
 
-
 def flatten(list_of_lists):
     """
     Flattens a list of lists
@@ -53,7 +52,7 @@ def schedule2string(schedule, max_rooms, max_periods):
     return ret
 
 
-def create_dictionary(dir):
+def create_directory(dir):
     with lock:
         if not os.path.exists(dir):
             os.makedirs(dir)
