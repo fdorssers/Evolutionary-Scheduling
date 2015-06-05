@@ -30,8 +30,6 @@ def main(individuals=10, generations=30, crossover_pb=0.5, mutation_pb=0.1):
     crossover_pb = parse_list_or_number(crossover_pb, float)
     mutation_pb = parse_list_or_number(mutation_pb, float)
 
-    individuals = [10] * 10
-
     random.seed(64)
     info = parser.parse()
     eas = []
