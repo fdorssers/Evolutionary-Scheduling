@@ -1,9 +1,11 @@
 import multiprocessing
+import os
 import pickle
 import random
 import threading
 import json
 import time
+import zipfile
 
 from deap import base
 from deap import creator
@@ -144,22 +146,32 @@ class SchedulingEA(threading.Thread):
         return json.dumps(self.jsonify(), sort_keys=True)
 
     def save(self):
-        def pickle_save(data, folder):
+
+        def write_to_zip_and_remove(path):
+            zip_file.write(path)
+            os.remove(path)
+            os.removedirs("/".join(os.path.split(path)[:-1]))
+
+        def pickle_save_zip(data, folder, file):
             create_dictionary(folder)
-            f = open(folder + filename + ".bin", 'wb')
+            path = os.path.join(folder, file)
+            f = open(path, 'wb')
             pickle.dump(data, f)
             f.close()
+            write_to_zip_and_remove(path)
 
-        def save_str(object, folder, extension=None):
+        def save_str(object, folder, file):
             create_dictionary(folder)
-            extension = "txt" if extension is None else extension
-            f = open(folder + filename + '.' + extension, 'w')
+            path = os.path.join(folder, file)
+            f = open(path, 'w')
             f.write(str(object))
             f.close()
+            write_to_zip_and_remove(path)
 
-        def save_readable_population(pop, num_rooms, num_periods):
-            create_dictionary(show_pop_folder)
-            f = open(show_pop_folder + filename + ".txt", 'w')
+        def save_readable_population(pop, num_rooms, num_periods, folder, file):
+            create_dictionary(folder)
+            path = os.path.join(folder, file)
+            f = open(path, 'w')
             pop = sorted(pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
             for i, ind in enumerate(pop):
                 fitt_comp = "(" + ") + (".join(
@@ -168,28 +180,24 @@ class SchedulingEA(threading.Thread):
                 f.write(schedule2string(ind, num_rooms, num_periods))
                 f.write("===\n\n")
             f.close()
+            write_to_zip_and_remove(path)
 
-        def plot_progress(logbook, parameters):
-            create_dictionary(plot_pop_folder)
+        def plot_progress(logbook, parameters, folder, file):
+            create_dictionary(folder)
+            path = os.path.join(folder, file)
             parameter_str = ", ".join([str(k) + '$=' + str(parameters[k]) + '$' for k in sorted(parameters)])
             plot_ea_progress(logbook, parameter_str)
-            plt.savefig(plot_pop_folder + filename)
-
-        # Folders and filename
-        filename = str(self.name).replace(" ", "_")
-        raw_folder = "logbook/raw/"
-        show_folder = "logbook/show/"
-        info_folder = "logbook/info/"
-        complete_pop_folder = "pop/complete/"
-        hof_pop_folder = "pop/hof/"
-        show_pop_folder = "pop/show/"
-        plot_pop_folder = "pop/plot/"
+            plt.savefig(path)
+            write_to_zip_and_remove(path)
 
         # Save
-        pickle_save(self.logbook, raw_folder)
-        pickle_save(self.pop, complete_pop_folder)
-        pickle_save(self.hof, hof_pop_folder)
-        save_str(self.logbook, show_folder)
-        save_str(str(self), info_folder, 'json')
-        save_readable_population(self.pop, self.num_rooms, self.num_periods)
-        plot_progress(self.logbook, self.jsonify()["ea"])
+        save_dir = "logs"
+        create_dictionary(save_dir)
+        zip_file = zipfile.ZipFile("logs/" + str(self.name).replace(" ", "_") + ".zip", 'w', zipfile.ZIP_DEFLATED)
+        pickle_save_zip(self.logbook, "logbook", "raw.bin")
+        pickle_save_zip(self.pop, "pop", "complete.bin")
+        pickle_save_zip(self.hof, "pop", "hof.bin")
+        save_str(self.logbook, "logbook", "show.txt")
+        save_str(str(self), "logbook", "info.json")
+        save_readable_population(self.pop, self.num_rooms, self.num_periods, "pop", "show.txt")
+        plot_progress(self.logbook, self.jsonify()["ea"], "pop", "plot.png")
