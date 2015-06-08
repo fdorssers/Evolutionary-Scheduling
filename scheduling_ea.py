@@ -119,7 +119,7 @@ class SchedulingEA(threading.Thread):
 
     def run(self):
         self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof, verbose=False)
+                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof, verbose=True)
         self.done = True
 
     def mutate(self, individual, indpb=0.05):
