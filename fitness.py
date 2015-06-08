@@ -1,7 +1,7 @@
 import time
 
 from institutionalconstraint import InstitutionalEnum
-from misc import flatten, get_period_to_exam_mapping, student_intersection
+from misc import flatten, student_intersection
 from individual import get_student_to_period_mapping, get_period_to_exam_mapping
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum

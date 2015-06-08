@@ -87,12 +87,13 @@ class SchedulingEA(threading.Thread):
                               institutional_constraints=self.institutional_con)
         # Use two point cross over
         self.toolbox.register("mate", tools.cxTwoPoint)
-        self.toolbox.decorate("mate", meme.mate_memes(self.exams, self.periods, self.rooms, self.institutional_con))
+        # self.toolbox.decorate("mate", meme.mate_memes(self.exams, self.periods, self.rooms, self.institutional_con))
         # Use the mutation operator specified in this file
         self.toolbox.register("mutate", individual.mutate, indpb=self.indpb)
-        self.toolbox.decorate("mutate", meme.mutate_memes)
+        # self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
+        self.toolbox.decorate("select", meme.apply_memes(self.exams, self.periods, self.rooms, self.institutional_con))
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)

@@ -1,32 +1,33 @@
 from random import randint
 
 from individual import get_period_to_room_to_exam_mapping
+from institutionalconstraint import InstitutionalEnum
 
 
 __author__ = 'pieter'
 
 
-def mate_memes(exams, periods, rooms, institutional_constraints):
-    def mate_memes_decorator(func):
-        def wrapper(*args, **kargs):
-            individual_a, individual_b = func(*args, **kargs)
-            # room_limit_repair(individual_a, exams, rooms)
-            # individual_a = frontload_repair(individual_a, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
-            # individual_b = frontload_repair(individual_a, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
-            return individual_a, individual_b
+def apply_memes(*args):
+    def selection_wrapper(selection_func):
+        def wrapper(population, k, tournsize):
+            for i in range(len(population)):
+                population[i] = individual_memes(population[i], *args)
+            population = population_memes(population)
+            pop = selection_func(population, k, tournsize)
+            return pop
+
         return wrapper
-    return mate_memes_decorator
+    return selection_wrapper
 
 
-def mutate_memes(func):
-    def wrapper(*args, **kargs):
-        individual = func(*args, **kargs)
-        return individual
-    return wrapper
+def individual_memes(individual, exams, periods, rooms, institutional_constraints):
+    # room_limit_repair(individual, exams, rooms)
+    individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+    return individual
 
 
-def local_repair():
-    pass
+def population_memes(population):
+    return population
 
 
 def frontload_repair(individual, exams, periods, frontload_constraint):
