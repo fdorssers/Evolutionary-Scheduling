@@ -11,7 +11,7 @@ from deap import algorithms
 import numpy as np
 
 import fitness
-from individual import attr_generator, Individual
+import individual
 from institutionalconstraint import InstitutionalEnum
 import meme
 
@@ -67,15 +67,15 @@ class SchedulingEA(threading.Thread):
                            -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
                            -self.institutional_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
         creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
-        creator.create(self.individual_name, Individual, fitness=getattr(creator, self.fitness_name))
+        creator.create(self.individual_name, individual.Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
         # Use the self.toolbox to initialize the individuals
         self.toolbox = base.Toolbox()
         # Generator of room-period combinations
-        self.toolbox.register("attr_exam", attr_generator, self.num_rooms, self.num_periods)
+        self.toolbox.register("exam", individual.exam_generator, self.num_rooms, self.num_periods)
         # Generator of schedules
-        self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.attr_exam, n=self.num_exams)
+        self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.exam, n=self.num_exams)
         # Generator of Individuals; schedule + constants
         self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule(),
                               self.num_rooms, self.num_periods)
@@ -90,7 +90,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("mate", tools.cxTwoPoint)
         self.toolbox.decorate("mate", meme.mate_memes(self.exams, self.periods, self.rooms, self.institutional_con))
         # Use the mutation operator specified in this file
-        self.toolbox.register("mutate", self.mutate, indpb=self.indpb)
+        self.toolbox.register("mutate", individual.mutate, indpb=self.indpb)
         self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
@@ -118,19 +118,6 @@ class SchedulingEA(threading.Thread):
         self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
                                                      ngen=self.gen, stats=self.stats, halloffame=self.hof)
         self.done = True
-
-    def mutate(self, individual, indpb=0.05):
-        """
-        Mutate the schedule
-        """
-        for i in range(0, len(individual)):
-            if random.random() < indpb:
-                individual[i] = (
-                    # random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2,
-                    # 2)) % self.num_periods
-                    random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)
-                )
-        return individual,
 
     def jsonify(self):
         return {"problem": {"exams": self.num_exams, "periods": self.num_periods, "rooms": self.num_rooms,

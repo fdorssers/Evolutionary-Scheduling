@@ -1,15 +1,28 @@
 import random
+
 import numpy as np
+
 
 __author__ = 'pieter'
 
 
-def attr_generator(num_rooms, num_periods):
+def exam_generator(num_rooms, num_periods):
     return random.randint(0, num_rooms - 1), random.randint(0, num_periods - 1)
 
 
-class Individual(list):
+def mutate(individual, indpb=0.05):
+    """
+    Mutate the schedule
+    """
+    for i in range(0, len(individual)):
+        if random.random() < indpb:
+            new_room = random.randint(0, individual.num_rooms - 1)
+            new_period =  random.randint(0, individual.num_periods - 1)
+            individual[i] = (new_room, new_period)
+    return individual,
 
+
+class Individual(list):
     def __init__(self, iterable, num_rooms, num_periods):
         super().__init__(iterable)
         self.num_rooms = num_rooms
