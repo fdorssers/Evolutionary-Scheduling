@@ -6,7 +6,7 @@ import random
 import sys
 import datetime
 import zipfile
-from misc import schedule2string, plot_ea_progress, create_directory
+from misc import plot_ea_progress, create_directory
 import matplotlib.pyplot as plt
 
 from scheduling_ea import SchedulingEA
@@ -29,8 +29,6 @@ def main(individuals=10, generations=30, crossover_pb=0.5, mutation_pb=0.1):
     generations = parse_list_or_number(generations, int)
     crossover_pb = parse_list_or_number(crossover_pb, float)
     mutation_pb = parse_list_or_number(mutation_pb, float)
-
-    individuals = [10] * 10
 
     random.seed(64)
     info = parser.parse()
@@ -90,7 +88,7 @@ def save_date(ea):
                 fitt_comp = "(" + ") + (".join(
                     map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
                 f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
-                f.write(schedule2string(ind, num_rooms, num_periods))
+                f.write(str(ind))
                 f.write("===\n\n")
             f.close()
             write_to_zip_and_remove(temp, path)

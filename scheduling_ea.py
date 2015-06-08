@@ -11,13 +11,9 @@ from deap import algorithms
 import numpy as np
 
 import fitness
+from individual import attr_generator, Individual
 from institutionalconstraint import InstitutionalEnum
 import meme
-
-
-
-
-# Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
 class SchedulingEA(threading.Thread):
@@ -71,17 +67,18 @@ class SchedulingEA(threading.Thread):
                            -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
                            -self.institutional_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
         creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
-        creator.create(self.individual_name, list, fitness=getattr(creator, self.fitness_name))
+        creator.create(self.individual_name, Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
         # Use the self.toolbox to initialize the individuals
         self.toolbox = base.Toolbox()
-        # Attributes to generate random rooms and periods
-        self.toolbox.register("attr_exam",
-                              lambda: (random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)))
-        # Create the individual with alternating rooms and periods
-        self.toolbox.register("individual", tools.initRepeat, getattr(creator, self.individual_name),
-                              self.toolbox.attr_exam, n=self.num_exams)
+        # Generator of room-period combinations
+        self.toolbox.register("attr_exam", attr_generator, self.num_rooms, self.num_periods)
+        # Generator of schedules
+        self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.attr_exam, n=self.num_exams)
+        # Generator of Individuals; schedule + constants
+        self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule(),
+                              self.num_rooms, self.num_periods)
         # Create the population as a list of the individuals
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
@@ -119,7 +116,7 @@ class SchedulingEA(threading.Thread):
 
     def run(self):
         self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof, verbose=False)
+                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof)
         self.done = True
 
     def mutate(self, individual, indpb=0.05):
