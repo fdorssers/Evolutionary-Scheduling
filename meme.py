@@ -22,7 +22,8 @@ def apply_memes(*args):
 
 def individual_memes(individual, exams, periods, rooms, institutional_constraints):
     # room_limit_repair(individual, exams, rooms)
-    individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+    # individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+    # individual = room_limit_naive(individual, exams, periods, rooms)
     return individual
 
 
@@ -40,6 +41,38 @@ def frontload_repair(individual, exams, periods, frontload_constraint):
             individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
     return individual
 
+
+def room_limit_naive(individual, exams, periods, rooms):
+    mapping = get_period_to_room_to_exam_mapping(individual)
+    stack = []
+    for i in range(2):
+        for period_i in range(len(periods)):
+            for room_i in range(len(rooms)):
+                total_students = 0
+                # Remove exams from busy rooms
+                if period_i in mapping and room_i in mapping[period_i]:
+                    exam_list = mapping[period_i][room_i]
+                    exam_sizes = list(map(lambda exam_i: len(exams[exam_i].students), exam_list))
+                    total_students = sum(exam_sizes)
+                    while total_students > rooms[room_i].capacity:
+                        removed_exam = exam_list.pop()
+                        removed_exam_size = len(exams[removed_exam].students)
+                        total_students -= removed_exam_size
+                        stack.append(removed_exam)
+                # Add exams to empty rooms
+                stack_remove = []
+                for i in range(len(stack)):
+                    if total_students + len(exams[stack[i]].students) < rooms[room_i].capacity:
+                        added_exam = stack[i]
+                        added_exam_size = len(exams[added_exam].students)
+                        total_students += added_exam_size
+                        individual[added_exam] = (room_i, period_i)
+                        stack_remove.append(i)
+                # Remove placed exams from stack
+                for i in sorted(stack_remove, reverse=True):
+                    del stack[i]
+
+    return individual
 
 def room_limit_repair(individual, exams, rooms):
     period_to_room_to_exam_mapping = get_period_to_room_to_exam_mapping(individual)
