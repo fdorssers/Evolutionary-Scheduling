@@ -1,7 +1,8 @@
 import time
 
 from institutionalconstraint import InstitutionalEnum
-from misc import flatten
+from misc import flatten, get_period_to_exam_mapping, student_intersection
+from individual import get_student_to_period_mapping, get_period_to_exam_mapping
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
 
@@ -322,46 +323,3 @@ def period_penalty_constraint(schedule, periods):
     penalty by the number of times the exams timetabled within that period.
     """
     return sum([periods[p].penalty for (_, p) in schedule])
-
-
-# Helper functions
-
-
-def get_period_to_exam_mapping(schedule, exams):
-    period_to_exam = dict()
-    for exam_i, (_, period_i) in enumerate(schedule):
-        if period_i in period_to_exam:
-            period_to_exam[period_i].append(exams[exam_i])
-        else:
-            period_to_exam[period_i] = [exams[exam_i]]
-    return period_to_exam
-
-
-def get_room_to_exam_mapping(schedule, exams):
-    room_to_exam = dict()
-    for exam_i, (room_i, _) in enumerate(schedule):
-        if room_i in room_to_exam:
-            room_to_exam[room_i].append(exams[exam_i])
-        else:
-            room_to_exam[room_i] = [exams[exam_i]]
-    return room_to_exam
-
-
-def student_intersection(exams1, exams2):
-    f_get_students = lambda x: x.students
-    first_students = map(f_get_students, exams1)
-    second_students = map(f_get_students, exams2)
-    first_students = set([item for sublist in first_students for item in sublist])
-    second_students = set([item for sublist in second_students for item in sublist])
-    return first_students & second_students
-
-
-def get_student_to_period_mapping(schedule, exams):
-    student_to_periods = dict()
-    for exam_i, (_, period_i) in enumerate(schedule):
-        for student in exams[exam_i].students:
-            if student in student_to_periods:
-                student_to_periods[student].add(period_i)
-            else:
-                student_to_periods[student] = {period_i}
-    return student_to_periods

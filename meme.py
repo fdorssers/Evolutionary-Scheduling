@@ -1,9 +1,9 @@
-from institutionalconstraint import InstitutionalEnum
 from random import randint
 
-__author__ = 'pieter'
+from individual import get_period_to_room_to_exam_mapping
 
-from collections import defaultdict
+
+__author__ = 'pieter'
 
 
 def mate_memes(exams, periods, rooms, institutional_constraints):
@@ -61,27 +61,3 @@ def room_limit_repair(individual, exams, rooms):
                 print('Exams: {}'.format(exam_is))
                 print('Exams sizes: {}'.format(list(map(lambda x: len(exams[x].students), exam_is))))
     return
-
-
-def get_period_to_room_to_exam_mapping(schedule):
-    period_to_room_to_exam_mapping = dict()
-    for exam_i, (room_i, period_i) in enumerate(schedule):
-        if period_i in period_to_room_to_exam_mapping:
-            if room_i in period_to_room_to_exam_mapping[period_i]:
-                period_to_room_to_exam_mapping[period_i][room_i].append(exam_i)
-            else:
-                period_to_room_to_exam_mapping[period_i][room_i] = [exam_i]
-        else:
-            period_to_room_to_exam_mapping[period_i] = dict()
-            period_to_room_to_exam_mapping[period_i][room_i] = [exam_i]
-    return period_to_room_to_exam_mapping
-
-
-def get_room_to_exam_mapping(schedule, exams):
-    room_to_exam = dict()
-    for exam_i, (room_i, _) in enumerate(schedule):
-        if room_i in room_to_exam:
-            room_to_exam[room_i].append(exams[exam_i])
-        else:
-            room_to_exam[room_i] = [exams[exam_i]]
-    return room_to_exam

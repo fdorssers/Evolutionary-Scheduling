@@ -40,3 +40,14 @@ def plot_ea_progress(logbook, parameter_str):
     num_xs = min(len(duration), 15)
     xs = np.round(np.linspace(0, len(duration) - 1, num_xs)).astype(np.int).tolist()
     plt.xticks([duration[x] for x in xs], xs)
+
+
+def student_intersection(exams1, exams2):
+    f_get_students = lambda x: x.students
+    first_students = map(f_get_students, exams1)
+    second_students = map(f_get_students, exams2)
+    first_students = set([item for sublist in first_students for item in sublist])
+    second_students = set([item for sublist in second_students for item in sublist])
+    return first_students & second_students
+
+

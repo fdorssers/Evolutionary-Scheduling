@@ -16,7 +16,7 @@ import schedule_parser_2 as parser
 __author__ = 'pieter'
 
 
-def main(individuals=10, generations=30, crossover_pb=0.5, mutation_pb=0.1):
+def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
