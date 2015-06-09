@@ -53,7 +53,7 @@ def frontload_repair(individual, exams, periods, frontload_constraint):
 def room_limit_naive(individual, exams, periods, rooms):
     mapping = get_period_to_room_to_exam_mapping(individual)
     stack = []
-    for i in range(2):
+    for _ in range(2):
         for period_i in range(len(periods)):
             for room_i in range(len(rooms)):
                 total_students = 0
