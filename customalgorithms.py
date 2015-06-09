@@ -76,6 +76,9 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
 
+        # Apply population meme
+        # population = toolbox.population_meme(population)
+
         # Evaluate the individuals with an invalid fitness and meme them
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         invalid_ind_fixed = list(toolbox.map(toolbox.individual_meme, invalid_ind))
