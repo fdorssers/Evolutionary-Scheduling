@@ -1,6 +1,7 @@
 from random import randint
 
 from individual import get_period_to_room_to_exam_mapping
+import individual
 from institutionalconstraint import InstitutionalEnum
 
 
@@ -22,12 +23,13 @@ def apply_memes(*args):
 
 def individual_memes(individual, exams, periods, rooms, institutional_constraints):
     # room_limit_repair(individual, exams, rooms)
-    # individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+    individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
     # individual = room_limit_naive(individual, exams, periods, rooms)
     return individual
 
 
 def population_memes(population):
+    population = remove_duplicates(population)
     return population
 
 
@@ -95,3 +97,13 @@ def room_limit_repair(individual, exams, rooms):
                 print('Exams: {}'.format(exam_is))
                 print('Exams sizes: {}'.format(list(map(lambda x: len(exams[x].students), exam_is))))
     return
+
+
+def remove_duplicates(population):
+    individual_dict = dict()
+    for indi_i, indi in enumerate(population):
+        if indi in individual_dict:
+            individual_dict[individual] = True
+        else:
+            population[indi_i],  = individual.mutate(indi)
+    return population
