@@ -1,12 +1,9 @@
-Meet with elena:
-- Representation: exams -> rooms/period
-- Efficient evalutation of the fitness
-- Approach: first get default EA running on on default problem. Then improve EA with memetics, then improve memetics
-with our own method.
-
-Todo:
-- Implement all constraint functions: individual -> number
-- Look at possibilities to repair individual
-
 Questions:
 - Probably the EA is faster with memetics, does it also improve on the found solution?
+
+- Apply memes with probability (gene or individual level)
+- Order of memes?
+- Combination of memes
+- Population meme: mutate individuals that are the same
+
+- Tabu search?
