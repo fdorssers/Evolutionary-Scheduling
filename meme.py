@@ -12,11 +12,12 @@ __author__ = 'pieter'
 def individual_memes(individual, exams, periods, rooms, institutional_constraints, period_constraints):
     def memes(individual):
         # room_limit_repair(individual, exams, rooms)
-        # individual = frontload_repair(individual, exams, periods,
-        #                               institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
-        # individual = room_limit_naive(individual, exams, periods, rooms)
-        # individual = exam_order_repair(individual, period_constraints)
+        individual = frontload_repair(individual, exams, periods,
+                                      institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+        individual = room_limit_naive(individual, exams, periods, rooms)
+        individual = exam_order_repair(individual, period_constraints)
         individual = exam_coincidence_repair(individual, period_constraints)
+        individual = period_exclusion_repair(individual, len(periods), period_constraints)
         return individual
 
     if not hasattr(individual.fitness, "value"):
@@ -98,6 +99,17 @@ def exam_coincidence_repair(individual, period_constraints):
                 individual[constraint.first] = individual[constraint.first][0], individual[constraint.second][1]
             else:
                 individual[constraint.second] = individual[constraint.second][0], individual[constraint.first][1]
+    return individual
+
+
+def period_exclusion_repair(individual, num_periods, period_constraints):
+    exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXCLUSION]
+    for constraint in exam_coincidence_constraints:
+        if individual[constraint.first][1] == individual[constraint.second][1]:
+            if random() > 0.5:
+                individual[constraint.first] = individual[constraint.first][0], randint(0, num_periods)
+            else:
+                individual[constraint.second] = individual[constraint.second][0], randint(0, num_periods)
     return individual
 
 
