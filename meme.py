@@ -2,31 +2,27 @@ from random import randint
 
 from individual import get_period_to_room_to_exam_mapping
 import individual
+from periodhardconstraint import PeriodHardEnum
 
 
 __author__ = 'pieter'
 
 
-def apply_memes(*args):
-    def selection_wrapper(selection_func):
-        def wrapper(population, k, tournsize):
-            for i in range(len(population)):
-                population[i] = individual_memes(population[i], *args)
-            population = population_memes(population)
-            pop = selection_func(population, k, tournsize)
-            return pop
+def individual_memes(individual, exams, periods, rooms, institutional_constraints, period_constraints):
+    def memes(individual):
+        # room_limit_repair(individual, exams, rooms)
+        # individual = frontload_repair(individual, exams, periods, institutional_constraints[
+        # InstitutionalEnum.FRONTLOAD][0])
+        # individual = room_limit_naive(individual, exams, periods, rooms)
+        # individual = exam_order_repair(individual, period_constraints)
+        return individual
 
-        return wrapper
-
-    return selection_wrapper
-
-
-def individual_memes(individual, exams, periods, rooms, institutional_constraints):
-    # room_limit_repair(individual, exams, rooms)
-    # individual = frontload_repair(individual, exams, periods, institutional_constraints[
-    # InstitutionalEnum.FRONTLOAD][0])
-    # individual = room_limit_naive(individual, exams, periods, rooms)
-    return individual
+    if not hasattr(individual.fitness, "value"):
+        return memes(individual)
+    elif not individual.fitness.value:
+        return memes(individual)
+    else:
+        return individual
 
 
 def population_memes(population):
@@ -80,6 +76,15 @@ def room_limit_naive(individual, exams, periods, rooms):
                 for i in sorted(stack_remove, reverse=True):
                     del stack[i]
 
+    return individual
+
+
+def exam_order_repair(individual, period_constraints):
+    for constraint in period_constraints[PeriodHardEnum.AFTER]:
+        if individual[constraint.first][1] < individual[constraint.second][1]:
+            temp = individual[constraint.first]
+            individual[constraint.first] = individual[constraint.second]
+            individual[constraint.second] = temp
     return individual
 
 
