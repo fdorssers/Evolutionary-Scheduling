@@ -97,6 +97,8 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
                               rooms=self.rooms, institutional_constraints=self.institutional_con,
                               period_constraints=self.period_con)
+        # Use population memes
+        self.toolbox.register("population_meme", meme.population_memes)
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)
