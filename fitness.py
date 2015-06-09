@@ -26,7 +26,9 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     """
     Calculate the fitness of the schedule
     """
-    conflict_fitness = conflict_constraint(schedule, period_constraints)
+    # conflict_fitness = conflict_constraint(schedule, period_constraints)
+    exam_coincidence_fitness = exam_coincidence_constraint(schedule, period_constraints)
+    period_exclusion_fitness = period_exclusion_constraint(schedule, period_constraints)
     room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
     period_related_fitness = period_related_constraint(schedule, period_constraints)
@@ -40,20 +42,33 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
     return (
-        conflict_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
+        exam_coincidence_fitness, period_exclusion_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
         room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, period_spread_fitness,
         mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness, period_penalty_fitness)
 
 
 # Hard constraints
 
-
-def conflict_constraint(schedule, period_constraints):
+def exam_coincidence_constraint(schedule, period_constraints):
     """Returns penalty
 
-    Two conflicting exams in the same period.
+    Two exams that should have same periods but don't.
     """
     exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXAM_COINCIDENCE]
+    violations = 0
+    for exam_coincidence_constraint in exam_coincidence_constraints:
+        first_exam = schedule[exam_coincidence_constraint.first]
+        second_exam = schedule[exam_coincidence_constraint.second]
+        violations += first_exam[1] != second_exam[1]
+    return violations
+
+
+def period_exclusion_constraint(schedule, period_constraints):
+    """Returns penalty
+
+    Two exams that should have same periods but don't.
+    """
+    exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXCLUSION]
     violations = 0
     for exam_coincidence_constraint in exam_coincidence_constraints:
         first_exam = schedule[exam_coincidence_constraint.first]

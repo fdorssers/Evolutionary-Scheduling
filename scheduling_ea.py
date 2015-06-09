@@ -65,7 +65,7 @@ class SchedulingEA(threading.Thread):
                            -self.institutional_con[InstitutionalEnum.PERIODSPREAD][0].values[0],
                            -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
                            -self.institutional_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
+        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 6 + soft_weightings))
         creator.create(self.individual_name, individual.Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):

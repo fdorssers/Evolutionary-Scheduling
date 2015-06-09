@@ -4,6 +4,6 @@ Questions:
 - Apply memes with probability (gene or individual level)
 - Order of memes?
 - Combination of memes
-- Population meme: mutate individuals that are the same
+- Don't remove best individuals
 
 - Tabu search?

@@ -2,6 +2,7 @@ from random import randint
 
 from individual import get_period_to_room_to_exam_mapping
 import individual
+from institutionalconstraint import InstitutionalEnum
 from periodhardconstraint import PeriodHardEnum
 
 
@@ -11,10 +12,10 @@ __author__ = 'pieter'
 def individual_memes(individual, exams, periods, rooms, institutional_constraints, period_constraints):
     def memes(individual):
         # room_limit_repair(individual, exams, rooms)
-        # individual = frontload_repair(individual, exams, periods, institutional_constraints[
-        # InstitutionalEnum.FRONTLOAD][0])
-        # individual = room_limit_naive(individual, exams, periods, rooms)
-        # individual = exam_order_repair(individual, period_constraints)
+        individual = frontload_repair(individual, exams, periods,
+                                      institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+        individual = room_limit_naive(individual, exams, periods, rooms)
+        individual = exam_order_repair(individual, period_constraints)
         return individual
 
     if not hasattr(individual.fitness, "value"):
