@@ -8,6 +8,7 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 import numpy as np
+from customalgorithms import ea_custom
 
 import fitness
 import individual
@@ -93,7 +94,9 @@ class SchedulingEA(threading.Thread):
         # self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
-        self.toolbox.decorate("select", meme.apply_memes(self.exams, self.periods, self.rooms, self.institutional_con))
+        # self.toolbox.decorate("select", meme.apply_memes(self.exams, self.periods, self.rooms, self.institutional_con))
+        # Use individual memes
+        self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods, rooms=self.rooms, institutional_constraints=self.institutional_con)
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)
@@ -115,8 +118,8 @@ class SchedulingEA(threading.Thread):
         self.stats = stats
 
     def run(self):
-        self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof)
+        self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
+                                           ngen=self.gen, stats=self.stats, halloffame=self.hof)
         self.done = True
 
     def jsonify(self):

@@ -52,6 +52,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
+    list(toolbox.map(toolbox.individual_meme, invalid_ind))
     fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
     for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
@@ -74,6 +75,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+        list(toolbox.map(toolbox.individual_meme, invalid_ind))
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
