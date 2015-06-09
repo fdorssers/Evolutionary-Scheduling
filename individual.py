@@ -7,13 +7,14 @@ __author__ = 'pieter'
 
 
 class Individual(list):
-    def __init__(self, iterable, num_rooms, num_periods):
-        super().__init__(iterable)
+
+    def __init__(self, func, num_rooms, num_periods):
+        super().__init__(func())
         self.num_rooms = num_rooms
         self.num_periods = num_periods
 
     def __hash__(self):
-        return hash(str(self))
+        return hash(str(list(self)))
 
     def __str__(self):
         room2period2exams = dict()

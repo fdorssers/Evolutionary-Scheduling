@@ -2,7 +2,6 @@ from random import randint
 
 from individual import get_period_to_room_to_exam_mapping
 import individual
-from institutionalconstraint import InstitutionalEnum
 
 
 __author__ = 'pieter'
@@ -18,17 +17,24 @@ def apply_memes(*args):
             return pop
 
         return wrapper
+
     return selection_wrapper
 
 
 def individual_memes(individual, exams, periods, rooms, institutional_constraints):
     # room_limit_repair(individual, exams, rooms)
-    individual = frontload_repair(individual, exams, periods, institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+    # individual = frontload_repair(individual, exams, periods, institutional_constraints[
+    # InstitutionalEnum.FRONTLOAD][0])
     # individual = room_limit_naive(individual, exams, periods, rooms)
     return individual
 
 
 def population_memes(population):
+    """
+    Population based memes should invalidate the fitness of the individuals that are changed
+    :param population:
+    :return:
+    """
     population = remove_duplicates(population)
     return population
 
@@ -76,6 +82,7 @@ def room_limit_naive(individual, exams, periods, rooms):
 
     return individual
 
+
 def room_limit_repair(individual, exams, rooms):
     period_to_room_to_exam_mapping = get_period_to_room_to_exam_mapping(individual)
     leftover_exams = []
@@ -102,8 +109,10 @@ def room_limit_repair(individual, exams, rooms):
 def remove_duplicates(population):
     individual_dict = dict()
     for indi_i, indi in enumerate(population):
-        if indi in individual_dict:
-            individual_dict[individual] = True
+        if indi not in individual_dict:
+            individual_dict[indi] = True
         else:
-            population[indi_i],  = individual.mutate(indi)
+            population[indi_i], = individual.mutate(indi)
+            if hasattr(population[indi_i].fitness, "value"):
+                del population[indi_i].fitness.value
     return population

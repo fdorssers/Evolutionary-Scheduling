@@ -76,7 +76,7 @@ class SchedulingEA(threading.Thread):
         # Generator of schedules
         self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.exam, n=self.num_exams)
         # Generator of Individuals; schedule + constants
-        self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule(),
+        self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule,
                               self.num_rooms, self.num_periods)
         # Create the population as a list of the individuals
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
