@@ -107,9 +107,9 @@ def period_exclusion_repair(individual, num_periods, period_constraints):
     for constraint in exam_coincidence_constraints:
         if individual[constraint.first][1] == individual[constraint.second][1]:
             if random() > 0.5:
-                individual[constraint.first] = individual[constraint.first][0], randint(0, num_periods)
+                individual[constraint.first] = individual[constraint.first][0], randint(0, num_periods - 1)
             else:
-                individual[constraint.second] = individual[constraint.second][0], randint(0, num_periods)
+                individual[constraint.second] = individual[constraint.second][0], randint(0, num_periods - 1)
     return individual
 
 
