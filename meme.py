@@ -9,15 +9,16 @@ from periodhardconstraint import PeriodHardEnum
 __author__ = 'pieter'
 
 
-def individual_memes(individual, exams, periods, rooms, institutional_constraints, period_constraints):
+def individual_memes(individual, exams, periods, rooms, constraints):
+    room_con, period_con, institute_con = constraints
     def memes(individual):
         # room_limit_repair(individual, exams, rooms)
         individual = frontload_repair(individual, exams, periods,
-                                      institutional_constraints[InstitutionalEnum.FRONTLOAD][0])
+                                      institute_con[InstitutionalEnum.FRONTLOAD][0])
         individual = room_limit_naive(individual, exams, periods, rooms)
-        individual = exam_order_repair(individual, period_constraints)
-        individual = exam_coincidence_repair(individual, period_constraints)
-        individual = period_exclusion_repair(individual, len(periods), period_constraints)
+        individual = exam_order_repair(individual, period_con)
+        individual = exam_coincidence_repair(individual, period_con)
+        individual = period_exclusion_repair(individual, len(periods), period_con)
         return individual
 
     if not hasattr(individual.fitness, "value"):

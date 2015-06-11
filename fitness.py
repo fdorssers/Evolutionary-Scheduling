@@ -22,23 +22,24 @@ def timer(n, filter=0.99):
     previous = time.time()
 
 
-def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints):
+def naive_fitness(schedule, exams, periods, rooms, constraints):
     """
     Calculate the fitness of the schedule
     """
-    # conflict_fitness = conflict_constraint(schedule, period_constraints)
-    exam_coincidence_fitness = exam_coincidence_constraint(schedule, period_constraints)
-    period_exclusion_fitness = period_exclusion_constraint(schedule, period_constraints)
+    room_con, period_con, institute_con = constraints
+    # conflict_fitness = conflict_constraint(schedule, period_con)
+    exam_coincidence_fitness = exam_coincidence_constraint(schedule, period_con)
+    period_exclusion_fitness = period_exclusion_constraint(schedule, period_con)
     room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
     period_utilisation_fitness = period_utilisation_constraint(schedule, exams, periods)
-    period_related_fitness = period_related_constraint(schedule, period_constraints)
-    room_related_fitness = room_related_constraint(schedule, room_constraints)
+    period_related_fitness = period_related_constraint(schedule, period_con)
+    room_related_fitness = room_related_constraint(schedule, room_con)
     two_exams_in_a_row_fitness = two_exams_in_a_row_constraint(schedule, periods, exams)
     two_exams_in_a_day_fitness = two_exams_in_a_day_constraint(schedule, periods, exams)
     # period_spread_constraint4 is now fastest
-    period_spread_fitness = period_spread_constraint4(schedule, exams, periods, institutional_constraints)
+    period_spread_fitness = period_spread_constraint4(schedule, exams, periods, institute_con)
     mixed_duration_fitness = mixed_duration_constraint(schedule, exams)
-    larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institutional_constraints)
+    larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institute_con)
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
     return (
@@ -49,12 +50,12 @@ def naive_fitness(schedule, exams, periods, rooms, period_constraints, room_cons
 
 # Hard constraints
 
-def exam_coincidence_constraint(schedule, period_constraints):
+def exam_coincidence_constraint(schedule, period_con):
     """Returns penalty
 
     Two exams that should have same periods but don't.
     """
-    exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXAM_COINCIDENCE]
+    exam_coincidence_constraints = period_con[PeriodHardEnum.EXAM_COINCIDENCE]
     violations = 0
     for exam_coincidence_constraint in exam_coincidence_constraints:
         first_exam = schedule[exam_coincidence_constraint.first]
@@ -63,12 +64,12 @@ def exam_coincidence_constraint(schedule, period_constraints):
     return violations
 
 
-def period_exclusion_constraint(schedule, period_constraints):
+def period_exclusion_constraint(schedule, period_con):
     """Returns penalty
 
     Two exams that should have same periods but don't.
     """
-    exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXCLUSION]
+    exam_coincidence_constraints = period_con[PeriodHardEnum.EXCLUSION]
     violations = 0
     for exam_coincidence_constraint in exam_coincidence_constraints:
         first_exam = schedule[exam_coincidence_constraint.first]
@@ -112,26 +113,26 @@ def period_utilisation_constraint(schedule, exams, periods):
     return violations
 
 
-def period_related_constraint(schedule, period_constraints):
+def period_related_constraint(schedule, period_con):
     """Returns penalty
 
     Ordering requirements not obeyed.
     """
     violations = 0
-    for order_constraint in period_constraints[PeriodHardEnum.AFTER]:
+    for order_constraint in period_con[PeriodHardEnum.AFTER]:
         first_period = schedule[order_constraint.first][1]
         second_period = schedule[order_constraint.second][1]
         violations += second_period >= first_period
     return violations
 
 
-def room_related_constraint(schedule, room_constraints):
+def room_related_constraint(schedule, room_con):
     """Returns penalty
 
     Room requirements not obeyed
     """
     violations = 0
-    for constraint in room_constraints[RoomHardEnum.ROOM_EXCLUSIVE]:
+    for constraint in room_con[RoomHardEnum.ROOM_EXCLUSIVE]:
         exam = constraint.first
         constraint_room, constraint_period = schedule[exam]
         for exam_i, (room, period) in enumerate(schedule):
@@ -178,14 +179,14 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
     return violations
 
 
-def period_spread_constraint(schedule, exams, institutional_constraints):
+def period_spread_constraint(schedule, exams, institute_con):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
     This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
     Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_spread_constraints = institute_con[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
     student_to_period = get_student_to_period_mapping(schedule, exams)
     violations = 0
@@ -200,14 +201,14 @@ def period_spread_constraint(schedule, exams, institutional_constraints):
     return violations
 
 
-def period_spread_constraint2(schedule, exams, institutional_constraints):
+def period_spread_constraint2(schedule, exams, institute_con):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
     This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
     Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_spread_constraints = institute_con[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
     period_to_students = dict()
@@ -229,14 +230,14 @@ def period_spread_constraint2(schedule, exams, institutional_constraints):
     return violations
 
 
-def period_spread_constraint3(schedule, exams, institutional_constraints):
+def period_spread_constraint3(schedule, exams, institute_con):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
     This can be thought of an extension of the two constraints previously described.  Within the �Institutional Model 
     Index', a figure is provided relating to how many periods the solution should be �optimised' over.
     """
-    period_spread_constraints = institutional_constraints[InstitutionalEnum.PERIODSPREAD]
+    period_spread_constraints = institute_con[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
     period_to_exam = get_period_to_exam_mapping(schedule, exams)
     period_to_students = dict()
@@ -258,13 +259,13 @@ def period_spread_constraint3(schedule, exams, institutional_constraints):
     return violations
 
 
-def period_spread_constraint4(schedule, exams, periods, institutional_constraints):
+def period_spread_constraint4(schedule, exams, periods, institute_con):
     violations = 0
     results = {i: set() for i, _ in enumerate(periods)}
     for e, (r, p) in enumerate(schedule):
         results[p].update(exams[e].students)
 
-    spread = institutional_constraints[InstitutionalEnum.PERIODSPREAD][0].values[0]
+    spread = institute_con[InstitutionalEnum.PERIODSPREAD][0].values[0]
     for i in range(0, len(periods) - spread + 1):
         union = results[i]
         for j in range(i + 1, i + spread):
@@ -299,13 +300,13 @@ def mixed_duration_constraint(schedule, exams):
     return violations
 
 
-def larger_exams_constraint(schedule, exams, periods, institutional_constraints):
+def larger_exams_constraint(schedule, exams, periods, institute_con):
     """Returns penalty
 
     It is desirable that examinations with the largest numbers of students are timetabled at the beginning of the 
     examination session.
     """
-    num_large_exams, num_large_periods, _ = institutional_constraints[InstitutionalEnum.FRONTLOAD][0].values
+    num_large_exams, num_large_periods, _ = institute_con[InstitutionalEnum.FRONTLOAD][0].values
     max_period = len(periods) - num_large_periods
 
     exam_sizes = dict(map(lambda kv: (kv[0], len(kv[1].students)), exams.items()))
