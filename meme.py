@@ -10,7 +10,7 @@ from periodhardconstraint import PeriodHardEnum
 __author__ = 'pieter'
 
 
-def individual_memes(individual, exams, periods, rooms, constraints, memepb=0.1):
+def individual_memes(individual, exams, periods, rooms, constraints, memepb=0.5):
     room_con, period_con, institute_con = constraints
     def memes(individual):
         individual2 = copy.copy(individual)
@@ -48,18 +48,18 @@ def population_memes(population):
     return population
 
 
-def frontload_repair(individual, exams, periods, frontload_constraint):
+def frontload_repair(individual, exams, periods, frontload_constraint, pb=1.0):
     number_exams = frontload_constraint.values[0]
     last_periods = frontload_constraint.values[1]
     initial_periods = len(periods) - last_periods
     largest_exams = sorted(range(0, len(exams)), key=lambda x: len(exams[x].students), reverse=True)[:number_exams]
     for exam_i in largest_exams:
-        if individual[exam_i][1] >= initial_periods:
+        if individual[exam_i][1] >= initial_periods and random() < pb:
             individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
     return individual
 
 
-def room_limit_naive(individual, exams, periods, rooms):
+def room_limit_naive(individual, exams, periods, rooms, pb=1.0):
     mapping = get_period_to_room_to_exam_mapping(individual)
     stack = []
     for _ in range(2):
@@ -67,7 +67,7 @@ def room_limit_naive(individual, exams, periods, rooms):
             for room_i in range(len(rooms)):
                 total_students = 0
                 # Remove exams from busy rooms
-                if period_i in mapping and room_i in mapping[period_i]:
+                if period_i in mapping and room_i in mapping[period_i] and random() < pb:
                     exam_list = mapping[period_i][room_i]
                     exam_sizes = list(map(lambda exam_i: len(exams[exam_i].students), exam_list))
                     total_students = sum(exam_sizes)
@@ -92,19 +92,19 @@ def room_limit_naive(individual, exams, periods, rooms):
     return individual
 
 
-def exam_order_repair(individual, period_constraints):
+def exam_order_repair(individual, period_constraints, pb=1.0):
     for constraint in period_constraints[PeriodHardEnum.AFTER]:
-        if individual[constraint.first][1] < individual[constraint.second][1]:
+        if individual[constraint.first][1] < individual[constraint.second][1] and random() < pb:
             temp = individual[constraint.first]
             individual[constraint.first] = individual[constraint.second]
             individual[constraint.second] = temp
     return individual
 
 
-def exam_coincidence_repair(individual, period_constraints):
+def exam_coincidence_repair(individual, period_constraints, pb=1.0):
     exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXAM_COINCIDENCE]
     for constraint in exam_coincidence_constraints:
-        if individual[constraint.first][1] != individual[constraint.second][1]:
+        if individual[constraint.first][1] != individual[constraint.second][1] and random() < pb:
             if random() > 0.5:
                 individual[constraint.first] = individual[constraint.first][0], individual[constraint.second][1]
             else:
@@ -112,10 +112,10 @@ def exam_coincidence_repair(individual, period_constraints):
     return individual
 
 
-def period_exclusion_repair(individual, num_periods, period_constraints):
+def period_exclusion_repair(individual, num_periods, period_constraints, pb=1.0):
     exam_coincidence_constraints = period_constraints[PeriodHardEnum.EXCLUSION]
     for constraint in exam_coincidence_constraints:
-        if individual[constraint.first][1] == individual[constraint.second][1]:
+        if individual[constraint.first][1] == individual[constraint.second][1] and random() < pb:
             if random() > 0.5:
                 individual[constraint.first] = individual[constraint.first][0], randint(0, num_periods - 1)
             else:
