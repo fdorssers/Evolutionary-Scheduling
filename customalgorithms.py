@@ -1,8 +1,9 @@
 from deap.algorithms import varAnd
 from deap import tools
+import signal
 
 
-def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__):
+def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__, iteration_callback=None):
     """This algorithm reproduce the simplest evolutionary algorithm as
     presented in chapter 7 of [Back2000]_.
 
@@ -52,6 +53,8 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
 
     if hasattr(toolbox, 'individual_meme'):
         population = list(toolbox.map(toolbox.individual_meme, population))
+    if hasattr(toolbox, 'population_meme'):
+        population = toolbox.population_meme(population)
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -77,6 +80,8 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
 
         if hasattr(toolbox, 'individual_meme'):
             offspring = list(toolbox.map(toolbox.individual_meme, offspring))
+        if hasattr(toolbox, 'population_meme'):
+            offspring = toolbox.population_meme(offspring)
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
@@ -96,5 +101,8 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         if verbose:
             print(logbook.stream)
+
+        if hasattr(toolbox, 'iteration_callback'):
+            toolbox.iteration_callback()
 
     return population, logbook

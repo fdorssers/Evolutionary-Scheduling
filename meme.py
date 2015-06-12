@@ -1,3 +1,4 @@
+import copy
 from random import randint, random
 
 from individual import get_period_to_room_to_exam_mapping
@@ -9,16 +10,24 @@ from periodhardconstraint import PeriodHardEnum
 __author__ = 'pieter'
 
 
-def individual_memes(individual, exams, periods, rooms, constraints):
+def individual_memes(individual, exams, periods, rooms, constraints, memepb=0.1):
     room_con, period_con, institute_con = constraints
     def memes(individual):
+        individual2 = copy.copy(individual)
+
         # room_limit_repair(individual, exams, rooms)
-        individual = frontload_repair(individual, exams, periods,
-                                      institute_con[InstitutionalEnum.FRONTLOAD][0])
-        individual = room_limit_naive(individual, exams, periods, rooms)
-        individual = exam_order_repair(individual, period_con)
-        individual = exam_coincidence_repair(individual, period_con)
-        individual = period_exclusion_repair(individual, len(periods), period_con)
+        rand = random()
+        if rand < 1 / 5 * memepb:
+            individual = frontload_repair(individual, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0])
+        elif rand < 2 / 5 * memepb:
+            individual = room_limit_naive(individual, exams, periods, rooms)
+        elif rand < 3 / 5 * memepb:
+            individual = exam_order_repair(individual, period_con)
+        elif rand < 4 / 5 * memepb:
+            individual = exam_coincidence_repair(individual, period_con)
+        elif rand < memepb:
+            individual = period_exclusion_repair(individual, len(periods), period_con)
+
         return individual
 
     if not hasattr(individual.fitness, "value"):
