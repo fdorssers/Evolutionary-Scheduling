@@ -17,7 +17,7 @@ import meme
 
 class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
-                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
+                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1, memepb=.25, save_callback=None):
         super().__init__()
 
         # Problem properties
@@ -36,6 +36,7 @@ class SchedulingEA(threading.Thread):
         self.tournsize = tournsize
         self.cxpb = cxpb
         self.mutpb = mutpb
+        self.memepb = memepb
 
         # Constants
         self.name = name
@@ -48,6 +49,7 @@ class SchedulingEA(threading.Thread):
         self.stats = None
 
         self.done = False
+        self.save_callback = save_callback
 
         self.init_create_types()
         self.init_toolbox()
@@ -92,9 +94,12 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
         # Use individual memes
         self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
-                              rooms=self.rooms, constraints=self.constraints)
+                              rooms=self.rooms, constraints=self.constraints, memepb=self.memepb)
         # Use population memes
         self.toolbox.register("population_meme", meme.population_memes)
+        # Save data every iteration
+        if self.save_callback is not None:
+            self.toolbox.register("iteration_callback", lambda: self.save_callback(self))
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)
