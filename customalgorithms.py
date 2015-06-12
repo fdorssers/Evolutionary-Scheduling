@@ -103,6 +103,6 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
             print(logbook.stream)
 
         if hasattr(toolbox, 'iteration_callback'):
-            toolbox.iteration_callback()
+            toolbox.iteration_callback(population, logbook)
 
     return population, logbook

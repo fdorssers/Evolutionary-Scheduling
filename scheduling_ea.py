@@ -99,7 +99,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("population_meme", meme.population_memes)
         # Save data every iteration
         if self.save_callback is not None:
-            self.toolbox.register("iteration_callback", lambda: self.save_callback(self))
+            self.toolbox.register("iteration_callback", self.save_callback(self))
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)

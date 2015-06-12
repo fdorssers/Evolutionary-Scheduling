@@ -49,36 +49,41 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, ini
                     print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
                           "probability".format(ea_name, num_individual, num_generations, cxpb, mutpb))
                     ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
-                                       tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=lambda ea: q.put(ea))
+                                       tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=save_fun)
                     if init_ea_file is not None:
                         ea2.pop, ea2.hof = load_population(init_ea_file)
+                        ea2.name += '-'
                     ea2.start()
                     eas.append(ea2)
 
     while len(eas) > 0:
         try:
-            ea = q.get(False)
-            save_data(ea)
+            ea, pop, logbook = q.get(False)
+            save_data(ea, pop, logbook)
         except Empty:
             for i, ea in enumerate(eas):
                 if ea.done:
-                    save_data(ea, always_save=True)
+                    save_data(ea, ea.pop, ea.logbook, always_save=True)
                     del eas[i]
                     break
 
 
+def save_fun(ea):
+    def save_me(pop, logbook):
+        q.put((ea, pop, logbook))
+    return save_me
+
+
 def load_population(file_name):
-    name = os.path.split(file_name)[-1][:-4]
-    print("Name: {}".format(name))
+    def load_pickle(zip, name):
+        pickled = zip.open(name)
+        return pickle.load(pickled)
+
     zip_file = zipfile.ZipFile(file_name)
-    pop_pickle = zip_file.open("pop/complete.bin")
-    hof_pickle = zip_file.open("pop/hof.bin")
-    pop = pickle.load(pop_pickle)
-    hof = pickle.load(hof_pickle)
-    return pop, hof
+    return load_pickle(zip_file, "pop/complete.bin"), load_pickle(zip_file, "pop/hof.bin")
 
 
-def save_data(ea, always_save=False):
+def save_data(ea, pop, logbook, always_save=False):
     def temp_file(name):
         return os.path.join(log_dir, str(random.randint(0, 10 ** 10)) + name)
 
@@ -133,14 +138,14 @@ def save_data(ea, always_save=False):
         create_directory(log_dir)
         name = str(ea.name).replace(" ", "_")
         zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
-        pickle_save_zip(ea.logbook, "logbook", "raw.bin")
-        pickle_save_zip(ea.pop, "pop", "complete.bin")
+        pickle_save_zip(logbook, "logbook", "raw.bin")
+        pickle_save_zip(pop, "pop", "complete.bin")
         pickle_save_zip(ea.hof, "pop", "hof.bin")
-        save_str(ea.logbook, "logbook", "show.txt")
+        save_str(logbook, "logbook", "show.txt")
         save_str(str(ea), "logbook", "info.json")
-        save_readable_population(ea.pop, ea.num_rooms, ea.num_periods, "pop", "show.txt")
+        save_readable_population(pop, ea.num_rooms, ea.num_periods, "pop", "show.txt")
         if ea.logbook is not None:
-            plot_progress(ea.logbook, ea.jsonify()["ea"], "pop", "plot.png")
+            plot_progress(logbook, ea.jsonify()["ea"], "pop", "plot.png")
         zip_file.close()
         print("Done saving {}".format(ea.name))
 
