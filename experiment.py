@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use("Agg")
+
 from queue import Queue, Empty
 import os
 import pickle
@@ -6,8 +9,6 @@ import sys
 import datetime
 import time
 import zipfile
-
-import matplotlib.pyplot as plt
 
 from misc import plot_ea_progress, create_directory
 from scheduling_ea import SchedulingEA
@@ -19,7 +20,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
+def main(individuals=5, generations=5, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -28,12 +29,13 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, ini
         except ValueError:
             return list(map(type, param.split(",")))
 
+    # init_ea_file = 'logs/ea_2015_06_12_17_45_00_7696.zip'
+
     individuals = parse_list_or_number(individuals, int)
     generations = parse_list_or_number(generations, int)
     crossover_pb = parse_list_or_number(crossover_pb, float)
     mutation_pb = parse_list_or_number(mutation_pb, float)
 
-    random.seed(64)
     info = parser.parse()
     eas = []
 
@@ -42,17 +44,20 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, ini
             for cxpb in crossover_pb:
                 for mutpb in mutation_pb:
                     if init_ea_file is None:
-                        rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+                        rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
                         ea_name = "ea_{}".format(rand)
                     else:
-                        ea_name = os.path.split(init_ea_file)[-1][:-4]
+                        # Get the original name of the ea
+                        ea_name = os.path.split(init_ea_file)[-1][:-9]
                     print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
                           "probability".format(ea_name, num_individual, num_generations, cxpb, mutpb))
                     ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
                                        tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=save_fun)
+                    ea2.save_name = ea2.name + '_' + str(random.randint(1000, 9999)).zfill(4)
                     if init_ea_file is not None:
-                        ea2.pop, ea2.hof = load_population(init_ea_file)
-                        ea2.name += '-'
+                        pop, ea2.hof = load_population(init_ea_file)
+                        ea2.pop = (pop + ea2.pop)[:num_individual]
+
                     ea2.start()
                     eas.append(ea2)
 
@@ -81,7 +86,9 @@ def load_population(file_name):
         return pickle.load(pickled)
 
     zip_file = zipfile.ZipFile(file_name)
-    return load_pickle(zip_file, "pop/complete.bin"), load_pickle(zip_file, "pop/hof.bin")
+    ret = load_pickle(zip_file, "pop/complete.bin"), load_pickle(zip_file, "pop/hof.bin")
+    zip_file.close()
+    return ret
 
 
 def save_data(ea, pop, logbook, always_save=False):
@@ -123,21 +130,21 @@ def save_data(ea, pop, logbook, always_save=False):
         write_to_zip_and_remove(temp, path)
 
     def plot_progress(logbook, parameters, folder, file):
-        plt.clf()
+        matplotlib.pyplot.clf()
         path = os.path.join(folder, file)
         temp = temp_file(file)
         parameter_str = ", ".join([str(k) + '$=' + str(parameters[k]) + '$' for k in sorted(parameters)])
         plot_ea_progress(logbook, parameter_str)
-        plt.savefig(temp)
+        matplotlib.pyplot.savefig(temp)
         write_to_zip_and_remove(temp, path)
 
     # Save
     if not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time() or always_save:
         ea.last_save = time.time()
-        print("Saving {}".format(ea.name))
+        print("Saving {}".format(ea.save_name))
         log_dir = "logs"
         create_directory(log_dir)
-        name = str(ea.name).replace(" ", "_")
+        name = str(ea.save_name).replace(" ", "_")
         zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
         pickle_save_zip(logbook, "logbook", "raw.bin")
         pickle_save_zip(pop, "pop", "complete.bin")

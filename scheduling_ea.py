@@ -28,6 +28,11 @@ class SchedulingEA(threading.Thread):
         self.num_rooms = len(rooms)
         self.num_periods = len(periods)
         self.num_exams = len(exams)
+        self.soft_weightings = [-self.constraints[2][InstitutionalEnum.TWOINAROW][0].values[0],
+                           -self.constraints[2][InstitutionalEnum.TWOINADAY][0].values[0],
+                           -self.constraints[2][InstitutionalEnum.PERIODSPREAD][0].values[0],
+                           -self.constraints[2][InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
+                           -self.constraints[2][InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
 
         # EA properties
         self.indi = indi
@@ -60,12 +65,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        soft_weightings = [-self.constraints[2][InstitutionalEnum.TWOINAROW][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.TWOINADAY][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.PERIODSPREAD][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 6 + soft_weightings))
+        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 6 + self.soft_weightings))
         creator.create(self.individual_name, individual.Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
