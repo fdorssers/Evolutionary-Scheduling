@@ -1,9 +1,9 @@
 from deap.algorithms import varAnd
 from deap import tools
-import signal
 
 
-def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__, iteration_callback=None):
+def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__,
+              iteration_callback=None):
     """This algorithm reproduce the simplest evolutionary algorithm as
     presented in chapter 7 of [Back2000]_.
 
@@ -71,7 +71,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
         print(logbook.stream)
 
     # Begin the generational process
-    for gen in range(1, ngen+1):
+    for gen in range(1, ngen + 1):
         # Select the next generation individuals
         offspring = toolbox.select(population, len(population))
 

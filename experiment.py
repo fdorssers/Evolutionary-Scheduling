@@ -71,6 +71,7 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, ini
 def save_fun(ea):
     def save_me(pop, logbook):
         q.put((ea, pop, logbook))
+
     return save_me
 
 
