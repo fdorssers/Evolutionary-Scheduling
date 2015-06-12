@@ -19,7 +19,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2):
+def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -41,12 +41,17 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2):
         for num_generations in generations:
             for cxpb in crossover_pb:
                 for mutpb in mutation_pb:
-                    rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
-                    ea_name = "ea_{}".format(rand)
+                    if init_ea_file is None:
+                        rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+                        ea_name = "ea_{}".format(rand)
+                    else:
+                        ea_name = os.path.split(init_ea_file)[-1][:-4]
                     print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
                           "probability".format(ea_name, num_individual, num_generations, cxpb, mutpb))
                     ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
                                        tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=lambda ea: q.put(ea))
+                    if init_ea_file is not None:
+                        ea2.pop, ea2.hof = load_population(init_ea_file)
                     ea2.start()
                     eas.append(ea2)
 
@@ -60,6 +65,17 @@ def main(individuals=100, generations=50, crossover_pb=0.5, mutation_pb=0.2):
                     save_data(ea, always_save=True)
                     del eas[i]
                     break
+
+
+def load_population(file_name):
+    name = os.path.split(file_name)[-1][:-4]
+    print("Name: {}".format(name))
+    zip_file = zipfile.ZipFile(file_name)
+    pop_pickle = zip_file.open("pop/complete.bin")
+    hof_pickle = zip_file.open("pop/hof.bin")
+    pop = pickle.load(pop_pickle)
+    hof = pickle.load(hof_pickle)
+    return pop, hof
 
 
 def save_data(ea, always_save=False):
