@@ -12,6 +12,7 @@ class Individual(list):
         super().__init__(func())
         self.num_rooms = num_rooms
         self.num_periods = num_periods
+        self.memepb = 0.
 
     def __hash__(self):
         return hash(str(list(self)))
@@ -30,20 +31,21 @@ class Individual(list):
                 room2period2exams[room] = {period: [exam_i]}
         column_sizes = np.max(str_size, axis=0)
         column_sizes[column_sizes < 9] = 9
-        ret = "         | "
+        ret = '         | '
         for period in range(self.num_periods):
             column_size = column_sizes[period]
-            ret += ("period " + str(period) + " " * column_size)[:column_size] + " | "
-        ret += "\n"
+            ret += ('period ' + str(period) + ' ' * column_size)[:column_size] + ' | '
+        ret += '\n'
         for room in range(self.num_rooms):
-            ret += "{:<9}".format("room " + str(room)) + "| "
+            ret += '{:<9}'.format('room ' + str(room)) + '| '
             for period in range(self.num_periods):
                 column_size = column_sizes[period]
                 if room in room2period2exams and period in room2period2exams[room]:
-                    ret += (str(room2period2exams[room][period]) + " " * column_size)[:column_size] + " | "
+                    ret += (str(room2period2exams[room][period]) + ' ' * column_size)[:column_size] + ' | '
                 else:
-                    ret += " " * column_size + " | "
-            ret += "\n"
+                    ret += ' ' * column_size + ' | '
+            ret += '\n'
+        ret += 'memepb={}\n'.format(self.memepb)
         return ret
 
 
@@ -51,16 +53,37 @@ def exam_generator(num_rooms, num_periods):
     return random.randint(0, num_rooms - 1), random.randint(0, num_periods - 1)
 
 
-def mutate(individual, indpb=0.05):
+def mutate(individual, indpb):
     """
     Mutate the schedule
     """
+    if random.random() < indpb:
+        individual.memepb = random.random()
     for i in range(0, len(individual)):
         if random.random() < indpb:
             new_room = random.randint(0, individual.num_rooms - 1)
             new_period = random.randint(0, individual.num_periods - 1)
             individual[i] = (new_room, new_period)
     return individual,
+
+
+def cxTwoPoint(ind1, ind2):
+    # Crossover meme probability
+    new_memepb = (ind1.memepb + ind2.memepb) * .5
+    ind1.memepb = new_memepb
+    ind2.memepb = new_memepb
+    # Crossover schedule representation
+    size = min(len(ind1), len(ind2))
+    cxpoint1 = random.randint(1, size)
+    cxpoint2 = random.randint(1, size - 1)
+    if cxpoint2 >= cxpoint1:
+        cxpoint2 += 1
+    else:  # Swap the two cx points
+        cxpoint1, cxpoint2 = cxpoint2, cxpoint1
+
+    ind1[cxpoint1:cxpoint2], ind2[cxpoint1:cxpoint2] = ind2[cxpoint1:cxpoint2], ind1[cxpoint1:cxpoint2]
+
+    return ind1, ind2
 
 
 def get_student_to_period_mapping(schedule, exams):

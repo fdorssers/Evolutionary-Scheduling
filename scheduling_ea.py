@@ -4,7 +4,9 @@ import json
 import time
 
 from deap import base
+
 from deap import creator
+
 from deap import tools
 import numpy as np
 
@@ -85,8 +87,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods,
                               rooms=self.rooms, constraints=self.constraints)
         # Use two point cross over
-        self.toolbox.register("mate", tools.cxTwoPoint)
-        # self.toolbox.decorate("mate", meme.mate_memes(self.exams, self.periods, self.rooms, self.institutional_con))
+        self.toolbox.register("mate", individual.cxTwoPoint)
         # Use the mutation operator specified in this file
         self.toolbox.register("mutate", individual.mutate, indpb=self.indpb)
         # self.toolbox.decorate("mutate", meme.mutate_memes)
@@ -94,9 +95,9 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
         # Use individual memes
         self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
-                              rooms=self.rooms, constraints=self.constraints, memepb=self.memepb)
+                              rooms=self.rooms, constraints=self.constraints)
         # Use population memes
-        self.toolbox.register("population_meme", meme.population_memes)
+        self.toolbox.register("population_meme", meme.population_memes, indpb=self.indpb)
         # Save data every iteration
         if self.save_callback is not None:
             self.toolbox.register("iteration_callback", self.save_callback(self))
@@ -106,19 +107,20 @@ class SchedulingEA(threading.Thread):
         self.hof = tools.HallOfFame(5, similar=np.array_equal)
 
     def init_stats(self):
-        stats = tools.Statistics(lambda pop: np.sum(pop.fitness.wvalues, 0))
-        stats.register("name", lambda x: self.name)
-        stats.register("avg", np.mean)
-        stats.register("std", np.std)
-        stats.register("worst", np.min)
-        stats.register("best", np.max)
         start = time.time()
-        stats.register("duration", lambda x: time.time() - start)
+        pop_stats = tools.Statistics(lambda indi: np.sum(indi.fitness.wvalues, 0))
+        pop_stats.register("name", lambda x: self.name)
+        pop_stats.register("avg", np.mean)
+        pop_stats.register("std", np.std)
+        pop_stats.register("worst", np.min)
+        pop_stats.register("best", np.max)
+        pop_stats.register("duration", lambda x: time.time() - start)
 
-        # stats2 = tools.Statistics()
-        # stats2.register("best", lambda x: "\n" + schedule2string(self.hof[0], self.num_rooms, self.num_periods))
-        # self.mstats = tools.MultiStatistics(fitness=stats, size=stats2)
-        self.stats = stats
+        indi_stats = tools.Statistics(lambda indi: indi.memepb)
+        indi_stats.register("mean", np.mean)
+        indi_stats.register("std", np.std)
+
+        self.stats = tools.MultiStatistics(individual=pop_stats, memepb=indi_stats)
 
     def run(self):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,

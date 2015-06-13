@@ -1,4 +1,5 @@
 import matplotlib
+
 matplotlib.use("Agg")
 
 from queue import Queue, Empty
@@ -13,7 +14,6 @@ import zipfile
 from misc import plot_ea_progress, create_directory
 from scheduling_ea import SchedulingEA
 import schedule_parser_2 as parser
-
 
 __author__ = 'pieter'
 
