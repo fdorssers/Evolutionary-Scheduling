@@ -20,7 +20,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=5, generations=5, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
+def main(individuals=50, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -64,11 +64,14 @@ def main(individuals=5, generations=5, crossover_pb=0.5, mutation_pb=0.2, init_e
     while len(eas) > 0:
         try:
             ea, pop, logbook = q.get(False)
-            save_data(ea, pop, logbook)
+            if not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time():
+                save_data(ea, pop, logbook)
+                ea.last_save = time.time()
+            q.task_done()
         except Empty:
             for i, ea in enumerate(eas):
                 if ea.done:
-                    save_data(ea, ea.pop, ea.logbook, always_save=True)
+                    save_data(ea, ea.pop, ea.logbook)
                     del eas[i]
                     break
 
@@ -91,7 +94,7 @@ def load_population(file_name):
     return ret
 
 
-def save_data(ea, pop, logbook, always_save=False):
+def save_data(ea, pop, logbook):
     def temp_file(name):
         return os.path.join(log_dir, str(random.randint(0, 10 ** 10)) + name)
 
@@ -109,13 +112,14 @@ def save_data(ea, pop, logbook, always_save=False):
 
     def save_str(object, folder, file):
         temp = temp_file(file)
+        start = time.time()
         path = os.path.join(folder, file)
         f = open(temp, 'w')
         f.write(str(object))
         f.close()
         write_to_zip_and_remove(temp, path)
 
-    def save_readable_population(pop, num_rooms, num_periods, folder, file):
+    def save_readable_population(pop, folder, file):
         path = os.path.join(folder, file)
         temp = temp_file(file)
         f = open(temp, 'w')
@@ -139,23 +143,22 @@ def save_data(ea, pop, logbook, always_save=False):
         write_to_zip_and_remove(temp, path)
 
     # Save
-    if not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time() or always_save:
-        ea.last_save = time.time()
-        print("Saving {}".format(ea.save_name))
-        log_dir = "logs"
-        create_directory(log_dir)
-        name = str(ea.save_name).replace(" ", "_")
-        zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
-        pickle_save_zip(logbook, "logbook", "raw.bin")
-        pickle_save_zip(pop, "pop", "complete.bin")
-        pickle_save_zip(ea.hof, "pop", "hof.bin")
-        save_str(logbook, "logbook", "show.txt")
-        save_str(str(ea), "logbook", "info.json")
-        save_readable_population(pop, ea.num_rooms, ea.num_periods, "pop", "show.txt")
-        if ea.logbook is not None:
-            plot_progress(logbook, ea.jsonify()["ea"], "pop", "plot.png")
-        zip_file.close()
-        print("Done saving {}".format(ea.name))
+    print("Saving {}".format(ea.save_name))
+    log_dir = "logs"
+    create_directory(log_dir)
+    name = str(ea.save_name).replace(" ", "_")
+    zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
+    indi_logbook = logbook.chapters['individual']
+    pickle_save_zip(indi_logbook, "logbook", "raw.bin")
+    pickle_save_zip(pop, "pop", "complete.bin")
+    pickle_save_zip(ea.hof, "pop", "hof.bin")
+    save_str(indi_logbook, "logbook", "show.txt")
+    save_str(str(ea), "logbook", "info.json")
+    save_readable_population(pop, "pop", "show.txt")
+    if ea.logbook is not None:
+        plot_progress(indi_logbook, ea.jsonify()["ea"], "pop", "plot.png")
+    zip_file.close()
+    print("Done saving {}".format(ea.name))
 
 
 if __name__ == "__main__":
