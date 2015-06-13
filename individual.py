@@ -69,9 +69,10 @@ def mutate(individual, indpb):
 
 def cxTwoPoint(ind1, ind2):
     # Crossover meme probability
-    new_memepb = (ind1.memepb + ind2.memepb) * .5
-    ind1.memepb = new_memepb
-    ind2.memepb = new_memepb
+    if random.random() < .5:
+        ind1.memepb = ind1.memepb
+    else:
+        ind2.memepb = ind1.memepb
     # Crossover schedule representation
     size = min(len(ind1), len(ind2))
     cxpoint1 = random.randint(1, size)
