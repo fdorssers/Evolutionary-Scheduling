@@ -1,4 +1,3 @@
-import copy
 from random import randint, random
 
 from individual import get_period_to_room_to_exam_mapping
@@ -10,11 +9,11 @@ from periodhardconstraint import PeriodHardEnum
 __author__ = 'pieter'
 
 
-def individual_memes(individual, exams, periods, rooms, constraints, memepb=0.5):
+def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
     def memes(individual):
-        individual2 = copy.copy(individual)
 
+        memepb = individual.memepb
         # room_limit_repair(individual, exams, rooms)
         rand = random()
         if rand < 1 / 5 * memepb:
@@ -38,13 +37,13 @@ def individual_memes(individual, exams, periods, rooms, constraints, memepb=0.5)
         return individual
 
 
-def population_memes(population):
+def population_memes(population, indpb):
     """
     Population based memes should invalidate the fitness of the individuals that are changed
     :param population:
     :return:
     """
-    population = remove_duplicates(population)
+    population = remove_duplicates(population, indpb)
     return population
 
 
@@ -146,13 +145,13 @@ def room_limit_repair(individual, exams, rooms):
     return
 
 
-def remove_duplicates(population):
+def remove_duplicates(population, indpb):
     individual_dict = dict()
     for indi_i, indi in enumerate(population):
         if indi not in individual_dict:
             individual_dict[indi] = True
         else:
-            population[indi_i], = individual.mutate(indi)
+            population[indi_i], = individual.mutate(indi, indpb)
             if hasattr(population[indi_i].fitness, "value"):
                 del population[indi_i].fitness.value
     return population
