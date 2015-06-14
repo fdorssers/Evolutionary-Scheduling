@@ -6,7 +6,6 @@ from individual import get_student_to_period_mapping, get_period_to_exam_mapping
 from periodhardconstraint import PeriodHardEnum
 from roomhardconstraint import RoomHardEnum
 
-
 MUCH = 1000
 times = [0.] * 13
 previous = 0.
@@ -27,7 +26,12 @@ def naive_fitness(schedule, exams, periods, rooms, constraints):
     Calculate the fitness of the schedule
     """
     room_con, period_con, institute_con = constraints
-    # conflict_fitness = conflict_constraint(schedule, period_con)
+    soft_weightings = [institute_con[InstitutionalEnum.TWOINAROW][0].values[0],
+                       institute_con[InstitutionalEnum.TWOINADAY][0].values[0],
+                       institute_con[InstitutionalEnum.PERIODSPREAD][0].values[0],
+                       institute_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
+                       institute_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
+
     exam_coincidence_fitness = exam_coincidence_constraint(schedule, period_con)
     period_exclusion_fitness = period_exclusion_constraint(schedule, period_con)
     room_occupancy_fitness = room_occupancy_constraint(schedule, exams, rooms)
@@ -42,10 +46,13 @@ def naive_fitness(schedule, exams, periods, rooms, constraints):
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institute_con)
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
-    return (
-        exam_coincidence_fitness, period_exclusion_fitness, room_occupancy_fitness, period_utilisation_fitness, period_related_fitness,
-        room_related_fitness, two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, period_spread_fitness,
-        mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness, period_penalty_fitness)
+    
+    hard_fitness = exam_coincidence_fitness + period_exclusion_fitness + room_occupancy_fitness + \
+                   period_utilisation_fitness + period_related_fitness + room_related_fitness
+    soft_values = [two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, period_spread_fitness,
+                   mixed_duration_fitness, larger_exams_fitness, room_penalty_fitness, period_penalty_fitness]
+    soft_fitness = sum([weight * value for weight, value in zip(soft_weightings, soft_values)])
+    return hard_fitness, soft_fitness
 
 
 # Hard constraints

@@ -12,7 +12,7 @@ class Individual(list):
         super().__init__(func())
         self.num_rooms = num_rooms
         self.num_periods = num_periods
-        self.memepb = 0.
+        self.memepb = random.random() * 0.01
 
     def __hash__(self):
         return hash(str(list(self)))

@@ -13,8 +13,10 @@ A: All memes are possible, but only one is applied per indidivual
 Q: Don't remove best individuals
 A: ...
 
-todo: track the progress inidividual memes make
+idea: track the progress individual memes make
 todo: setup experiment with different memes
-todo: changing the mutation, crossover and meme probability through the generations
+idea: changing the mutation, crossover and meme probability through the generationss (possibly encode in the meme)
+idea: let hof use the sum of wvalues
+idea: add hof to each population
 
 - Tabu search?

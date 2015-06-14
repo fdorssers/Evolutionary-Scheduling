@@ -8,12 +8,12 @@ from deap import base
 from deap import creator
 
 from deap import tools
+from deap.tools import HallOfFame
 import numpy as np
 
 from customalgorithms import ea_custom
 import fitness
 import individual
-from institutionalconstraint import InstitutionalEnum
 import meme
 
 
@@ -30,11 +30,6 @@ class SchedulingEA(threading.Thread):
         self.num_rooms = len(rooms)
         self.num_periods = len(periods)
         self.num_exams = len(exams)
-        self.soft_weightings = [-self.constraints[2][InstitutionalEnum.TWOINAROW][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.TWOINADAY][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.PERIODSPREAD][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
-                           -self.constraints[2][InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
 
         # EA properties
         self.indi = indi
@@ -67,7 +62,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 6 + self.soft_weightings))
+        creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
         creator.create(self.individual_name, individual.Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
@@ -104,23 +99,29 @@ class SchedulingEA(threading.Thread):
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)
-        self.hof = tools.HallOfFame(5, similar=np.array_equal)
+        self.hof = HallOfFame(5, similar=np.array_equal)
 
     def init_stats(self):
         start = time.time()
-        pop_stats = tools.Statistics(lambda indi: np.sum(indi.fitness.wvalues, 0))
-        pop_stats.register("name", lambda x: self.name)
-        pop_stats.register("avg", np.mean)
-        pop_stats.register("std", np.std)
-        pop_stats.register("worst", np.min)
-        pop_stats.register("best", np.max)
-        pop_stats.register("duration", lambda x: time.time() - start)
+        hard_stats = tools.Statistics(lambda indi: indi.fitness.wvalues[0])
+        hard_stats.register("name", lambda x: self.name)
+        hard_stats.register("avg", np.mean)
+        hard_stats.register("std", np.std)
+        hard_stats.register("worst", np.min)
+        hard_stats.register("best", np.max)
+        hard_stats.register("duration", lambda x: time.time() - start)
+
+        soft_stats = tools.Statistics(lambda indi: indi.fitness.wvalues[1])
+        soft_stats.register("avg", np.mean)
+        soft_stats.register("std", np.std)
+        soft_stats.register("worst", np.min)
+        soft_stats.register("best", np.max)
 
         indi_stats = tools.Statistics(lambda indi: indi.memepb)
         indi_stats.register("mean", np.mean)
         indi_stats.register("std", np.std)
 
-        self.stats = tools.MultiStatistics(individual=pop_stats, memepb=indi_stats)
+        self.stats = tools.MultiStatistics(hard=hard_stats, soft=soft_stats, memepb=indi_stats)
 
     def run(self):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,

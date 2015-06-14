@@ -20,7 +20,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=50, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
+def main(individuals=10, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -148,7 +148,7 @@ def save_data(ea, pop, logbook):
     create_directory(log_dir)
     name = str(ea.save_name).replace(" ", "_")
     zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
-    indi_logbook = logbook.chapters['individual']
+    indi_logbook = logbook.chapters['hard']
     pickle_save_zip(indi_logbook, "logbook", "raw.bin")
     pickle_save_zip(pop, "pop", "complete.bin")
     pickle_save_zip(ea.hof, "pop", "hof.bin")
