@@ -4,9 +4,7 @@ import json
 import time
 
 from deap import base
-
 from deap import creator
-
 from deap import tools
 from deap.tools import HallOfFame
 import numpy as np

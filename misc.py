@@ -4,7 +4,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 __author__ = 'pieter'
 
 lock = Lock()
@@ -49,5 +48,3 @@ def student_intersection(exams1, exams2):
     first_students = set([item for sublist in first_students for item in sublist])
     second_students = set([item for sublist in second_students for item in sublist])
     return first_students & second_students
-
-

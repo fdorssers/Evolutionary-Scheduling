@@ -46,7 +46,7 @@ def naive_fitness(schedule, exams, periods, rooms, constraints):
     larger_exams_fitness = larger_exams_constraint(schedule, exams, periods, institute_con)
     room_penalty_fitness = room_penalty_constraint(schedule, rooms)
     period_penalty_fitness = period_penalty_constraint(schedule, periods)
-    
+
     hard_fitness = exam_coincidence_fitness + period_exclusion_fitness + room_occupancy_fitness + \
                    period_utilisation_fitness + period_related_fitness + room_related_fitness
     soft_values = [two_exams_in_a_row_fitness, two_exams_in_a_day_fitness, period_spread_fitness,

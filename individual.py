@@ -2,12 +2,10 @@ import random
 
 import numpy as np
 
-
 __author__ = 'pieter'
 
 
 class Individual(list):
-
     def __init__(self, func, num_rooms, num_periods):
         super().__init__(func())
         self.num_rooms = num_rooms

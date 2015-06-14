@@ -5,12 +5,12 @@ import individual
 from institutionalconstraint import InstitutionalEnum
 from periodhardconstraint import PeriodHardEnum
 
-
 __author__ = 'pieter'
 
 
 def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
+
     def memes(individual):
 
         memepb = individual.memepb
