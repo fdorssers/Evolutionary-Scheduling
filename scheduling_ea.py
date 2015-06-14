@@ -114,6 +114,7 @@ class SchedulingEA(threading.Thread):
         soft_stats.register("std", np.std)
         soft_stats.register("worst", np.min)
         soft_stats.register("best", np.max)
+        soft_stats.register("duration", lambda x: time.time() - start)
 
         indi_stats = tools.Statistics(lambda indi: indi.memepb)
         indi_stats.register("mean", np.mean)
@@ -131,7 +132,7 @@ class SchedulingEA(threading.Thread):
                             "period_con": len(self.constraints[1]), "room_con": len(self.constraints[0]),
                             "institutional_con": len(self.constraints[2])},
                 "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
-                       "tournsize": self.tournsize}}
+                       "tournsize": self.tournsize, "name": self.name}}
 
     def __str__(self):
         return json.dumps(self.jsonify(), sort_keys=True)

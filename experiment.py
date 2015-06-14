@@ -20,7 +20,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=10, generations=50, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
+def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -112,7 +112,6 @@ def save_data(ea, pop, logbook):
 
     def save_str(object, folder, file):
         temp = temp_file(file)
-        start = time.time()
         path = os.path.join(folder, file)
         f = open(temp, 'w')
         f.write(str(object))
@@ -123,11 +122,9 @@ def save_data(ea, pop, logbook):
         path = os.path.join(folder, file)
         temp = temp_file(file)
         f = open(temp, 'w')
-        pop = sorted(pop, key=lambda x: sum(x.fitness.wvalues), reverse=True)
+        pop = sorted(pop, key=lambda x: x.fitness, reverse=True)
         for i, ind in enumerate(pop):
-            fitt_comp = "(" + ") + (".join(
-                map(lambda x: "*".join(map(str, x)), zip(ind.fitness.weights, ind.fitness.values))) + ")"
-            f.write("Fitness {} = {}\n".format(sum(ind.fitness.wvalues), fitt_comp))
+            f.write("Fitness = {}\n".format(ind.fitness.wvalues))
             f.write(str(ind))
             f.write("===\n\n")
         f.close()
@@ -148,17 +145,17 @@ def save_data(ea, pop, logbook):
     create_directory(log_dir)
     name = str(ea.save_name).replace(" ", "_")
     zip_file = zipfile.ZipFile(os.path.join(log_dir, name + ".zip"), 'w', zipfile.ZIP_DEFLATED)
-    indi_logbook = logbook.chapters['hard']
-    pickle_save_zip(indi_logbook, "logbook", "raw.bin")
+    pickle_save_zip(logbook, "logbook", "raw.bin")
     pickle_save_zip(pop, "pop", "complete.bin")
     pickle_save_zip(ea.hof, "pop", "hof.bin")
-    save_str(indi_logbook, "logbook", "show.txt")
+    save_str(logbook, "logbook", "show.txt")
     save_str(str(ea), "logbook", "info.json")
     save_readable_population(pop, "pop", "show.txt")
     if ea.logbook is not None:
-        plot_progress(indi_logbook, ea.jsonify()["ea"], "pop", "plot.png")
+        plot_progress(logbook.chapters["hard"], ea.jsonify()["ea"], "pop", "plot_hard.png")
+        plot_progress(logbook.chapters["soft"], ea.jsonify()["ea"], "pop", "plot_soft.png")
     zip_file.close()
-    print("Done saving {}".format(ea.name))
+    print("Done saving {}".format(ea.save_name))
 
 
 if __name__ == "__main__":
