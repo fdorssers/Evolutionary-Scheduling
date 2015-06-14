@@ -1,5 +1,4 @@
 import multiprocessing
-import random
 import threading
 import json
 import time
@@ -7,31 +6,25 @@ import time
 from deap import base
 from deap import creator
 from deap import tools
-from deap import algorithms
+from deap.tools import HallOfFame
 import numpy as np
 
+from customalgorithms import ea_custom
 import fitness
-from institutionalconstraint import InstitutionalEnum
+import individual
 import meme
-
-
-
-
-# Todo: use deap wrapper to set bounds on rooms and periods indexes
 
 
 class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
-                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1):
+                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1, memepb=.25, save_callback=None):
         super().__init__()
 
         # Problem properties
         self.exams = exams
         self.periods = periods
         self.rooms = rooms
-        self.period_con = period_constraints
-        self.room_con = room_constraints
-        self.institutional_con = institutional_constraints
+        self.constraints = (room_constraints, period_constraints, institutional_constraints)
         self.num_rooms = len(rooms)
         self.num_periods = len(periods)
         self.num_exams = len(exams)
@@ -43,6 +36,7 @@ class SchedulingEA(threading.Thread):
         self.tournsize = tournsize
         self.cxpb = cxpb
         self.mutpb = mutpb
+        self.memepb = memepb
 
         # Constants
         self.name = name
@@ -55,6 +49,7 @@ class SchedulingEA(threading.Thread):
         self.stats = None
 
         self.done = False
+        self.save_callback = save_callback
 
         self.init_create_types()
         self.init_toolbox()
@@ -65,80 +60,76 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
-        soft_weightings = [-self.institutional_con[InstitutionalEnum.TWOINAROW][0].values[0],
-                           -self.institutional_con[InstitutionalEnum.TWOINADAY][0].values[0],
-                           -self.institutional_con[InstitutionalEnum.PERIODSPREAD][0].values[0],
-                           -self.institutional_con[InstitutionalEnum.NONMIXEDDURATIONS][0].values[0],
-                           -self.institutional_con[InstitutionalEnum.FRONTLOAD][0].values[0], -1, -1]
-        creator.create(self.fitness_name, base.Fitness, weights=tuple([-100.0] * 5 + soft_weightings))
-        creator.create(self.individual_name, list, fitness=getattr(creator, self.fitness_name))
+        creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
+        creator.create(self.individual_name, individual.Individual, fitness=getattr(creator, self.fitness_name))
 
     def init_toolbox(self):
         # Use the self.toolbox to initialize the individuals
         self.toolbox = base.Toolbox()
-        # Attributes to generate random rooms and periods
-        self.toolbox.register("attr_exam",
-                              lambda: (random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)))
-        # Create the individual with alternating rooms and periods
-        self.toolbox.register("individual", tools.initRepeat, getattr(creator, self.individual_name),
-                              self.toolbox.attr_exam, n=self.num_exams)
+        # Generator of room-period combinations
+        self.toolbox.register("exam", individual.exam_generator, self.num_rooms, self.num_periods)
+        # Generator of schedules
+        self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.exam, n=self.num_exams)
+        # Generator of Individuals; schedule + constants
+        self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule,
+                              self.num_rooms, self.num_periods)
         # Create the population as a list of the individuals
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
         # Use the fitness function specified in this file
         self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods,
-                              rooms=self.rooms, period_constraints=self.period_con, room_constraints=self.room_con,
-                              institutional_constraints=self.institutional_con)
+                              rooms=self.rooms, constraints=self.constraints)
         # Use two point cross over
-        self.toolbox.register("mate", tools.cxTwoPoint)
-        self.toolbox.decorate("mate", meme.mate_memes(self.exams, self.periods, self.rooms, self.institutional_con))
+        self.toolbox.register("mate", individual.cxTwoPoint)
         # Use the mutation operator specified in this file
-        self.toolbox.register("mutate", self.mutate, indpb=self.indpb)
-        self.toolbox.decorate("mutate", meme.mutate_memes)
+        self.toolbox.register("mutate", individual.mutate, indpb=self.indpb)
+        # self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
+        # Use individual memes
+        self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
+                              rooms=self.rooms, constraints=self.constraints)
+        # Use population memes
+        self.toolbox.register("population_meme", meme.population_memes, indpb=self.indpb)
+        # Save data every iteration
+        if self.save_callback is not None:
+            self.toolbox.register("iteration_callback", self.save_callback(self))
 
     def init_population(self):
         self.pop = self.toolbox.population(n=self.indi)
-        self.hof = tools.HallOfFame(5, similar=np.array_equal)
+        self.hof = HallOfFame(5, similar=np.array_equal)
 
     def init_stats(self):
-        stats = tools.Statistics(lambda pop: np.sum(pop.fitness.wvalues, 0))
-        stats.register("name", lambda x: self.name)
-        stats.register("avg", np.mean)
-        stats.register("std", np.std)
-        stats.register("worst", np.min)
-        stats.register("best", np.max)
         start = time.time()
-        stats.register("duration", lambda x: time.time() - start)
+        hard_stats = tools.Statistics(lambda indi: indi.fitness.wvalues[0])
+        hard_stats.register("name", lambda x: self.name)
+        hard_stats.register("avg", np.mean)
+        hard_stats.register("std", np.std)
+        hard_stats.register("worst", np.min)
+        hard_stats.register("best", np.max)
+        hard_stats.register("duration", lambda x: time.time() - start)
 
-        # stats2 = tools.Statistics()
-        # stats2.register("best", lambda x: "\n" + schedule2string(self.hof[0], self.num_rooms, self.num_periods))
-        # self.mstats = tools.MultiStatistics(fitness=stats, size=stats2)
-        self.stats = stats
+        soft_stats = tools.Statistics(lambda indi: indi.fitness.wvalues[1])
+        soft_stats.register("avg", np.mean)
+        soft_stats.register("std", np.std)
+        soft_stats.register("worst", np.min)
+        soft_stats.register("best", np.max)
+
+        indi_stats = tools.Statistics(lambda indi: indi.memepb)
+        indi_stats.register("mean", np.mean)
+        indi_stats.register("std", np.std)
+
+        self.stats = tools.MultiStatistics(hard=hard_stats, soft=soft_stats, memepb=indi_stats)
 
     def run(self):
-        self.pop, self.logbook = algorithms.eaSimple(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb,
-                                                     ngen=self.gen, stats=self.stats, halloffame=self.hof, verbose=True)
+        self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,
+                                           stats=self.stats, halloffame=self.hof)
         self.done = True
-
-    def mutate(self, individual, indpb=0.05):
-        """
-        Mutate the schedule
-        """
-        for i in range(0, len(individual)):
-            if random.random() < indpb:
-                individual[i] = (
-                    # random.randint(0, self.num_rooms - 1), (individual[i][1] + random.randint(-2,
-                    # 2)) % self.num_periods
-                    random.randint(0, self.num_rooms - 1), random.randint(0, self.num_periods - 1)
-                )
-        return individual,
 
     def jsonify(self):
         return {"problem": {"exams": self.num_exams, "periods": self.num_periods, "rooms": self.num_rooms,
-                            "period_con": len(self.period_con), "room_con": len(self.room_con),
-                            "institutional_con": len(self.institutional_con)},
+                            "period_con": len(self.constraints[1]), "room_con": len(self.constraints[0]),
+                            "institutional_con": len(self.constraints[2])},
                 "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
                        "tournsize": self.tournsize}}
 
