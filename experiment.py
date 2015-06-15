@@ -1,3 +1,4 @@
+import threading
 import matplotlib
 
 matplotlib.use("Agg")
@@ -20,7 +21,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, init_ea_file=None):
+def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, dataset=1, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -35,45 +36,50 @@ def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, init_
     generations = parse_list_or_number(generations, int)
     crossover_pb = parse_list_or_number(crossover_pb, float)
     mutation_pb = parse_list_or_number(mutation_pb, float)
+    datasets = parse_list_or_number(dataset, int)
+    datasets = list(["data/exam_comp_set{}.exam".format(dataset) for dataset in datasets])
 
-    info = parser.parse()
     eas = []
 
-    for num_individual in individuals:
-        for num_generations in generations:
-            for cxpb in crossover_pb:
-                for mutpb in mutation_pb:
-                    if init_ea_file is None:
-                        rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-                        ea_name = "ea_{}".format(rand)
-                    else:
-                        # Get the original name of the ea
-                        ea_name = os.path.split(init_ea_file)[-1][:-9]
-                    print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
-                          "probability".format(ea_name, num_individual, num_generations, cxpb, mutpb))
-                    ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
-                                       tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=save_fun)
-                    ea2.save_name = ea2.name + '_' + str(random.randint(1000, 9999)).zfill(4)
-                    if init_ea_file is not None:
-                        pop, ea2.hof = load_population(init_ea_file)
-                        ea2.pop = (pop + ea2.pop)[:num_individual]
+    for dataset in datasets:
+        info = parser.parse(dataset)
+        for num_individual in individuals:
+            for num_generations in generations:
+                for cxpb in crossover_pb:
+                    for mutpb in mutation_pb:
+                        if init_ea_file is None:
+                            rand = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+                            ea_name = "ea_{}".format(rand)
+                        else:
+                            # Get the original name of the ea
+                            ea_name = os.path.split(init_ea_file)[-1][:-9]
+                        print("Starting {} with {} individuals, {} generations, {} crossover probability and {} mutation "
+                              "probability on {}".format(ea_name, num_individual, num_generations, cxpb, mutpb, dataset))
+                        ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
+                                           tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=save_fun)
+                        ea2.save_name = ea2.name + '_' + str(random.randint(1000, 9999)).zfill(4)
+                        if init_ea_file is not None:
+                            pop, ea2.hof = load_population(init_ea_file)
+                            ea2.pop = (pop + ea2.pop)[:num_individual]
 
-                    ea2.start()
-                    eas.append(ea2)
+                        ea2.start()
+                        eas.append(ea2)
+                        time.sleep(1)
 
     while len(eas) > 0:
+        for i, ea in enumerate(eas):
+            if ea.done:
+                save_data(ea, ea.pop, ea.logbook)
+                del eas[i]
+                break
         try:
             ea, pop, logbook = q.get(False)
-            if not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time():
+            if not ea.done and (not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time()):
                 save_data(ea, pop, logbook)
                 ea.last_save = time.time()
             q.task_done()
         except Empty:
-            for i, ea in enumerate(eas):
-                if ea.done:
-                    save_data(ea, ea.pop, ea.logbook)
-                    del eas[i]
-                    break
+            pass
 
 
 def save_fun(ea):
@@ -151,12 +157,12 @@ def save_data(ea, pop, logbook):
     save_str(logbook, "logbook", "show.txt")
     save_str(str(ea), "logbook", "info.json")
     save_readable_population(pop, "pop", "show.txt")
-    if ea.logbook is not None:
-        plot_progress(logbook.chapters["hard"], ea.jsonify()["ea"], "pop", "plot_hard.png")
-        plot_progress(logbook.chapters["soft"], ea.jsonify()["ea"], "pop", "plot_soft.png")
+    plot_progress(logbook.chapters["hard"], ea.jsonify()["ea"], "pop", "plot_hard.png")
+    plot_progress(logbook.chapters["soft"], ea.jsonify()["ea"], "pop", "plot_soft.png")
     zip_file.close()
     print("Done saving {}".format(ea.save_name))
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    # main(*sys.argv[1:])
+    main(10, 10, .5, .2, "1,2,3,4,5,6,7,8")

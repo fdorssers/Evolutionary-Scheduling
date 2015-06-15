@@ -1,4 +1,5 @@
 from random import randint, random
+import numpy
 
 from individual import get_period_to_room_to_exam_mapping
 import individual
@@ -52,10 +53,11 @@ def frontload_repair(individual, exams, periods, frontload_constraint, pb=1.0):
     number_exams = frontload_constraint.values[0]
     last_periods = frontload_constraint.values[1]
     initial_periods = len(periods) - last_periods
-    largest_exams = sorted(range(0, len(exams)), key=lambda x: len(exams[x].students), reverse=True)[:number_exams]
-    for exam_i in largest_exams:
-        if individual[exam_i][1] >= initial_periods and random() < pb:
-            individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
+    if initial_periods > 0:
+        largest_exams = sorted(range(0, len(exams)), key=lambda x: len(exams[x].students), reverse=True)[:number_exams]
+        for exam_i in largest_exams:
+            if individual[exam_i][1] >= initial_periods and random() < pb:
+                individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
     return individual
 
 
