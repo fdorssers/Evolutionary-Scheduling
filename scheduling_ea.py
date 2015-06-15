@@ -17,7 +17,7 @@ import meme
 
 class SchedulingEA(threading.Thread):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
-                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1, memepb=.25, save_callback=None):
+                 indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1, memepb=.25, eatype=3, save_callback=None):
         super().__init__()
 
         # Problem properties
@@ -38,6 +38,7 @@ class SchedulingEA(threading.Thread):
         self.cxpb = cxpb
         self.mutpb = mutpb
         self.memepb = memepb
+        self.eatype = eatype
 
         # Constants
         self.name = name
@@ -89,7 +90,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
         # Use individual memes
         self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
-                              rooms=self.rooms, constraints=self.constraints)
+                              rooms=self.rooms, constraints=self.constraints, eatype=self.eatype)
         # Use population memes
         self.toolbox.register("population_meme", meme.population_memes, indpb=self.indpb)
         # Save data every iteration
@@ -124,7 +125,7 @@ class SchedulingEA(threading.Thread):
 
     def run(self):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,
-                                           stats=self.stats, halloffame=self.hof)
+                                           eatype=self.eatype, stats=self.stats, halloffame=self.hof)
         self.done = True
 
     def jsonify(self):
@@ -132,7 +133,7 @@ class SchedulingEA(threading.Thread):
                             "period_con": len(self.constraints[1]), "room_con": len(self.constraints[0]),
                             "institutional_con": len(self.constraints[2])},
                 "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
-                       "tournsize": self.tournsize, "name": self.name}}
+                       "tournsize": self.tournsize, "name": self.name, "eatype": self.eatype}}
 
     def __str__(self):
         return json.dumps(self.jsonify(), sort_keys=True)
