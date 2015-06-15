@@ -2,7 +2,7 @@ from deap.algorithms import varAnd
 from deap import tools
 
 
-def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=None, verbose=__debug__,
+def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, halloffame=None, verbose=__debug__,
               iteration_callback=None):
     """This algorithm reproduce the simplest evolutionary algorithm as
     presented in chapter 7 of [Back2000]_.
@@ -51,10 +51,11 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
-    if hasattr(toolbox, 'individual_meme'):
-        population = list(toolbox.map(toolbox.individual_meme, population))
-    if hasattr(toolbox, 'population_meme'):
-        population = toolbox.population_meme(population)
+    if eatype != 0:
+        if hasattr(toolbox, 'individual_meme'):
+            population = list(toolbox.map(toolbox.individual_meme, population))
+        if hasattr(toolbox, 'population_meme'):
+            population = toolbox.population_meme(population)
 
     # Evaluate the individuals with an invalid fitness
     invalid_ind = [ind for ind in population if not ind.fitness.valid]
@@ -78,10 +79,11 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, stats=None, halloffame=Non
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
 
-        if hasattr(toolbox, 'individual_meme'):
-            offspring = list(toolbox.map(toolbox.individual_meme, offspring))
-        if hasattr(toolbox, 'population_meme'):
-            offspring = toolbox.population_meme(offspring)
+        if eatype != 0:
+            if hasattr(toolbox, 'individual_meme'):
+                offspring = list(toolbox.map(toolbox.individual_meme, offspring))
+            if hasattr(toolbox, 'population_meme'):
+                offspring = toolbox.population_meme(offspring)
 
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]

@@ -12,7 +12,7 @@ __author__ = 'pieter'
 NUM_MEMES = 6
 
 
-def individual_memes(individual, exams, periods, rooms, constraints):
+def individual_memes(individual, exams, periods, rooms, constraints, eatype):
     room_con, period_con, institute_con = constraints
 
     def memes(individual):
@@ -22,6 +22,9 @@ def individual_memes(individual, exams, periods, rooms, constraints):
         memepb = meme_gene[:meme_gene_len / 2]
         meme_order = meme_gene[meme_gene_len / 2:]
         meme_order = np.argsort(meme_order)
+
+        if eatype == 2:
+            memepb = [1]*NUM_MEMES
 
         memes = [lambda indi: frontload_repair(indi, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0]),
                  lambda indi: room_limit_naive(indi, exams, periods, rooms, memepb[1]),
