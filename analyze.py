@@ -1,11 +1,11 @@
 import matplotlib
+
 matplotlib.use('Agg')
 
 import json
 import os
 import pickle
 import zipfile
-import binascii
 from deap import creator
 import individual
 from deap import base
@@ -34,11 +34,15 @@ def read_log(filename):
 
 
 def best_fitness_values(hofs):
-    return np.array([hof[0].fitness.wvalues for hof in hofs])
+    ret = np.array([hof[0].fitness.wvalues for hof in hofs])
+    return ret
 
 
-def all_fitness_values(pops):
-    return np.array([indi.fitness.wvalues for pop in pops for indi in pop])
+def mean_fitness_values(pops):
+    ret = []
+    for pop in pops:
+        ret.append(np.mean([indi.fitness.wvalues for indi in pop], 0))
+    return ret
 
 
 def mean_memes(pops):
@@ -49,9 +53,10 @@ def best_memes(hofs):
     return np.array([hof[0].meme_gene for hof in hofs])
 
 
-def plot_fitness(x, y, title, xlabel, ylabel):
+def plot_fitness(x, y1, y2, title, xlabel, ylabel):
     matplotlib.pyplot.clf()
-    matplotlib.pyplot.plot(np.array(x).T, np.array(y).T)
+    matplotlib.pyplot.plot(np.array(x).T, np.array(y1).T)
+    matplotlib.pyplot.plot(np.array(x).T, np.array(y2).T)
     matplotlib.pyplot.title(title)
     matplotlib.pyplot.xlabel(xlabel)
     matplotlib.pyplot.ylabel(ylabel)
@@ -63,9 +68,10 @@ def bar_memes(x, y1, y2, title, meme_names):
     matplotlib.pyplot.xlabel('Meme')
     matplotlib.pyplot.ylabel('Value')
     matplotlib.pyplot.bar(x, y1, width=0.4)
-    matplotlib.pyplot.bar(x+.5, y2, width=0.4, color='g')
-    matplotlib.pyplot.xticks(np.arange(0,6)+0.5, meme_names, rotation=15)
+    matplotlib.pyplot.bar(x + .5, y2, width=0.4, color='g')
+    matplotlib.pyplot.xticks(np.arange(0, 6) + 0.5, meme_names, rotation=15)
     matplotlib.pyplot.legend(['hof', 'pop'])
+
 
 def data_info_vs_fitness(dir, filter, info_key):
     hofs = dict()
@@ -78,11 +84,11 @@ def data_info_vs_fitness(dir, filter, info_key):
             dict_add(pops, info["ea"][info_key], [population])
     keys = list(sorted(hofs.keys()))
     best_values = list(map(lambda k: best_fitness_values(hofs[k]), keys))
-    all_values = list(map(lambda k: all_fitness_values(pops[k]), keys))
+    all_values = list(map(lambda k: mean_fitness_values(pops[k]), keys))
     f_mean = lambda x: np.mean(x, 0)
     mean_best_values = np.array(list(map(f_mean, best_values)))
     mean_all_values = np.array(list(map(f_mean, all_values)))
-    return np.array([keys, keys]), np.array([mean_best_values[:, 0], mean_all_values[:, 0]]), np.array([mean_best_values[:, 1], mean_all_values[:, 1]])
+    return np.array(keys), mean_best_values[:, 0], mean_all_values[:, 0], mean_best_values[:, 1], mean_all_values[:, 1]
 
 
 def data_memes(dir, filter):
@@ -96,26 +102,27 @@ def data_memes(dir, filter):
             pops.append(population)
     hof_memes = best_memes(hofs)
     pop_memes = mean_memes(pops)
-    create_directory('analyze')
     meme_names = ['front_load', 'room_limit', 'exam_order', 'exam_coincidence', 'period_exclusion', 'student_exam']
-    bar_memes(np.arange(0, 6), np.mean(hof_memes[:, :6], 0), np.mean(pop_memes[:, :6], 0), 'Average meme probability', meme_names)
+    bar_memes(np.arange(0, 6), np.mean(hof_memes[:, :6], 0), np.mean(pop_memes[:, :6], 0), 'Average meme probability',
+              meme_names)
     matplotlib.pyplot.savefig('analyze/meme_pb')
-    bar_memes(np.arange(0, 6), np.mean(hof_memes[:, 6:], 0), np.mean(pop_memes[:, 6:], 0), 'Average meme order', meme_names)
+    bar_memes(np.arange(0, 6), np.mean(hof_memes[:, 6:], 0), np.mean(pop_memes[:, 6:], 0), 'Average meme order',
+              meme_names)
     matplotlib.pyplot.savefig('analyze/meme_order')
 
 
 def info_vs_fitness(dir, filter):
-    for info in ['indi', 'cxpb', 'mutpb', 'gen']:
-        xs, ys_hard, ys_soft = data_info_vs_fitness(dir, filter, info)
+    for info in ['indi', 'cxpb', 'mutpb', 'gen', 'eatype']:
+        xs, ys_hard_best, ys_hard_mean, ys_soft_best, ys_soft_mean = data_info_vs_fitness(dir, filter, info)
         create_directory('analyze')
-        plot_fitness(xs, ys_hard, "Hard constraint fitness vs {}".format(info), info, "Avg fitness")
+        plot_fitness(xs, ys_hard_best, ys_hard_mean, "Hard constraint fitness vs {}".format(info), info, "Avg fitness")
         matplotlib.pyplot.savefig('analyze/hard_vs_{}'.format(info))
-        plot_fitness(xs, ys_soft, "Soft constraint fitness vs {}".format(info), info, "Avg fitness")
+        plot_fitness(xs, ys_soft_best, ys_soft_mean, "Soft constraint fitness vs {}".format(info), info, "Avg fitness")
         matplotlib.pyplot.savefig('analyze/soft_vs_{}'.format(info))
 
 
 dir = "logs"
-filter = lambda filename: True # "2015_06_14" in filename
+filter = lambda filename: True  # "2015_06_14" in filename
 
 info_vs_fitness(dir, filter)
 data_memes(dir, filter)
