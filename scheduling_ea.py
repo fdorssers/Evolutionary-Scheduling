@@ -15,7 +15,7 @@ import individual
 import meme
 
 
-class SchedulingEA(threading.Thread):
+class SchedulingEA(object):
     def __init__(self, exams, periods, rooms, period_constraints, room_constraints, institutional_constraints, name,
                  indi, gen, indpb=0.05, tournsize=3, cxpb=0.5, mutpb=0.1, memepb=.25, eatype=5, save_callback=None):
         super().__init__()
@@ -59,7 +59,7 @@ class SchedulingEA(threading.Thread):
         self.init_stats()
 
         pool = multiprocessing.Pool()
-        self.toolbox.register("map", pool.map)
+        # self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
         creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))

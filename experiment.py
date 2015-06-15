@@ -20,7 +20,7 @@ import schedule_parser_2 as parser
 
 __author__ = 'pieter'
 
-q = Queue()
+# q = Queue()
 
 
 def main(individuals=[10], generations=[3], crossover_pb=[0.5], mutation_pb=[0.2], dataset=[1], experiment_name='NA', init_ea_file=None, eatype=[3]):
@@ -51,31 +51,35 @@ def main(individuals=[10], generations=[3], crossover_pb=[0.5], mutation_pb=[0.2
                                 pop, ea2.hof = load_population(init_ea_file)
                                 ea2.pop = (pop + ea2.pop)[:num_individual]
 
-                            ea2.start()
-                            eas.append(ea2)
-                            time.sleep(1)
+                            ea2.run()
 
-    while len(eas) > 0:
-        for i, ea in enumerate(eas):
-            if ea.done:
-                save_data(ea, ea.pop, ea.logbook)
-                del eas[i]
-                break
-        try:
-            ea, pop, logbook = q.get(False)
-            if not ea.done and (not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time()):
-                save_data(ea, pop, deepcopy(logbook))
-                ea.last_save = time.time()
-            q.task_done()
-        except Empty:
-            pass
+                            save_data(ea2, ea2.pop, ea2.logbook)
+
+                            # eas.append(ea2)
+                            # time.sleep(1)
+
+    # while len(eas) > 0:
+    #     for i, ea in enumerate(eas):
+    #         if ea.done:
+    #             save_data(ea, ea.pop, ea.logbook)
+    #             del eas[i]
+    #             break
+    #     try:
+    #         ea, pop, logbook = q.get(False)
+    #         if not ea.done and (not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time()):
+    #             save_data(ea, pop, deepcopy(logbook))
+    #             ea.last_save = time.time()
+    #         q.task_done()
+    #     except Empty:
+    #         pass
 
 
 def save_fun(ea):
-    def save_me(pop, logbook):
-        q.put((ea, pop, logbook))
-
-    return save_me
+    return lambda x, y: None
+    # def save_me(pop, logbook):
+    #     q.put((ea, pop, logbook))
+    #
+    # return save_me
 
 
 def load_population(file_name):
