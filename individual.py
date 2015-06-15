@@ -96,6 +96,19 @@ def get_student_to_period_mapping(schedule, exams):
     return student_to_periods
 
 
+def get_student_to_period_to_exam_mapping(schedule, exams):
+    stpte = dict()
+    for exam_i, (_, period_i) in enumerate(schedule):
+        for student in exams[exam_i].students:
+            if student in stpte:
+                if period_i in stpte[student]:
+                    stpte[student][period_i].add(exam_i)
+                else:
+                    stpte[student][period_i] = [exam_i]
+            else:
+                stpte[student] = {period_i: exam_i}
+
+
 def get_room_to_exam_mapping2(schedule, exams):
     room_to_exam = dict()
     for exam_i, (room_i, _) in enumerate(schedule):

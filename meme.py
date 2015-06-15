@@ -1,6 +1,6 @@
-from random import randint, random
+from random import randint, random, sample
 
-from individual import get_period_to_room_to_exam_mapping
+from individual import get_period_to_room_to_exam_mapping, get_student_to_period_to_exam_mapping
 import individual
 from institutionalconstraint import InstitutionalEnum
 from periodhardconstraint import PeriodHardEnum
@@ -45,6 +45,19 @@ def population_memes(population, indpb):
     """
     population = remove_duplicates(population, indpb)
     return population
+
+
+def student_exam_coincidence_repair(individual, exams, periods, pb=1.0):
+    stpte = get_student_to_period_to_exam_mapping(individual, exams)
+    exams_moved = set()
+    all_periods = set(range(0, len(periods)))
+    for student, pte in stpte.items():
+        for period, exams in pte.items():
+            for exam in exams[1:]:
+                if exam not in exams_moved and random() < pb:
+                    new_period = sample(all_periods - set(pte.keys()))
+                    individual[exam] = (individual[exam[0]], new_period)
+    return individual
 
 
 def frontload_repair(individual, exams, periods, frontload_constraint, pb=1.0):
