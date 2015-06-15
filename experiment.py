@@ -22,7 +22,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, dataset=1, init_ea_file=None):
+def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, dataset=1, experiment_name='NA', init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
@@ -58,7 +58,7 @@ def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, datas
                               "probability on {}".format(ea_name, num_individual, num_generations, cxpb, mutpb, dataset))
                         ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations, indpb=0.1,
                                            tournsize=3, cxpb=cxpb, mutpb=mutpb, save_callback=save_fun)
-                        ea2.save_name = ea2.name + '_' + str(random.randint(1000, 9999)).zfill(4)
+                        ea2.save_name = ea2.name + '_name={}_ind={}_gen={}_set={}_cpb={}_mpb={}'.format(experiment_name, num_individual, num_generations, dataset[18:19], cxpb, mutpb) + '_' + str(random.randint(1000, 9999)).zfill(4)
                         if init_ea_file is not None:
                             pop, ea2.hof = load_population(init_ea_file)
                             ea2.pop = (pop + ea2.pop)[:num_individual]
