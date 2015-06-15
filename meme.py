@@ -23,8 +23,10 @@ def individual_memes(individual, exams, periods, rooms, constraints, eatype):
         meme_order = meme_gene[meme_gene_len / 2:]
         meme_order = np.argsort(meme_order)
 
-        if eatype == 2:
+        if eatype == 2 or eatype == 4:
             memepb = [1]*NUM_MEMES
+        if eatype == 2 or eatype == 3:
+            meme_order = range(0, NUM_MEMES)
 
         memes = [lambda indi: frontload_repair(indi, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0]),
                  lambda indi: room_limit_naive(indi, exams, periods, rooms, memepb[1]),
