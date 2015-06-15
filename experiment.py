@@ -164,5 +164,4 @@ def save_data(ea, pop, logbook):
 
 
 if __name__ == "__main__":
-    # main(*sys.argv[1:])
-    main(10, 10, .5, .2, "1,2,3,4,5,6,7,8")
+    main(*sys.argv[1:])
