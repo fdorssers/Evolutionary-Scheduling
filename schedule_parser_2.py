@@ -29,8 +29,8 @@ def parse_constraint(lines, header_start, header_end, function, constraint_enum)
     return constraints
 
 
-def parse():
-    with open('data/exam_comp_set1.exam') as f:
+def parse(dataset='data/exam_comp_set1.exam'):
+    with open(dataset) as f:
         indices = {}
         lines = []
         for i, line in enumerate(f):

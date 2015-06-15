@@ -7,6 +7,7 @@ from periodhardconstraint import PeriodHardEnum
 
 __author__ = 'pieter'
 
+NUM_MEMES = 5
 
 def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
@@ -16,15 +17,15 @@ def individual_memes(individual, exams, periods, rooms, constraints):
         memepb = individual.memepb
         # room_limit_repair(individual, exams, rooms)
         rand = random()
-        if rand < 1 / 5 * memepb:
+        if rand < 1 / 5 * memepb[0]:
             individual = frontload_repair(individual, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0])
-        elif rand < 2 / 5 * memepb:
+        elif rand < 2 / 5 * memepb[1]:
             individual = room_limit_naive(individual, exams, periods, rooms)
-        elif rand < 3 / 5 * memepb:
+        elif rand < 3 / 5 * memepb[2]:
             individual = exam_order_repair(individual, period_con)
-        elif rand < 4 / 5 * memepb:
+        elif rand < 4 / 5 * memepb[3]:
             individual = exam_coincidence_repair(individual, period_con)
-        elif rand < memepb:
+        elif rand < memepb[4]:
             individual = period_exclusion_repair(individual, len(periods), period_con)
 
         return individual
@@ -64,10 +65,11 @@ def frontload_repair(individual, exams, periods, frontload_constraint, pb=1.0):
     number_exams = frontload_constraint.values[0]
     last_periods = frontload_constraint.values[1]
     initial_periods = len(periods) - last_periods
-    largest_exams = sorted(range(0, len(exams)), key=lambda x: len(exams[x].students), reverse=True)[:number_exams]
-    for exam_i in largest_exams:
-        if individual[exam_i][1] >= initial_periods and random() < pb:
-            individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
+    if initial_periods > 0:
+        largest_exams = sorted(range(0, len(exams)), key=lambda x: len(exams[x].students), reverse=True)[:number_exams]
+        for exam_i in largest_exams:
+            if individual[exam_i][1] >= initial_periods and random() < pb:
+                individual[exam_i] = (individual[exam_i][0], randint(0, initial_periods - 1))
     return individual
 
 

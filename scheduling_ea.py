@@ -28,6 +28,7 @@ class SchedulingEA(threading.Thread):
         self.num_rooms = len(rooms)
         self.num_periods = len(periods)
         self.num_exams = len(exams)
+        self.num_memes = meme.NUM_MEMES
 
         # EA properties
         self.indi = indi
@@ -72,7 +73,7 @@ class SchedulingEA(threading.Thread):
         self.toolbox.register("schedule", tools.initRepeat, list, self.toolbox.exam, n=self.num_exams)
         # Generator of Individuals; schedule + constants
         self.toolbox.register("individual", getattr(creator, self.individual_name), self.toolbox.schedule,
-                              self.num_rooms, self.num_periods)
+                              self.num_rooms, self.num_periods, self.num_memes)
         # Create the population as a list of the individuals
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
@@ -107,19 +108,19 @@ class SchedulingEA(threading.Thread):
         hard_stats.register("std", np.std)
         hard_stats.register("worst", np.min)
         hard_stats.register("best", np.max)
-        hard_stats.register("duration", lambda x: time.time() - start)
+        hard_stats.register("duration", lambda x: round(time.time() - start, 1))
 
         soft_stats = tools.Statistics(lambda indi: indi.fitness.wvalues[1])
         soft_stats.register("avg", np.mean)
         soft_stats.register("std", np.std)
         soft_stats.register("worst", np.min)
         soft_stats.register("best", np.max)
+        soft_stats.register("duration", lambda x: round(time.time() - start, 1))
 
-        indi_stats = tools.Statistics(lambda indi: indi.memepb)
-        indi_stats.register("mean", np.mean)
-        indi_stats.register("std", np.std)
+        meme_stats = tools.Statistics(lambda indi: indi.memepb)
+        meme_stats.register("median", lambda x: np.round(np.median(x, 0), 2))
 
-        self.stats = tools.MultiStatistics(hard=hard_stats, soft=soft_stats, memepb=indi_stats)
+        self.stats = tools.MultiStatistics(hard=hard_stats, soft_stats=soft_stats, memepb=meme_stats)
 
     def run(self):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,
@@ -131,7 +132,7 @@ class SchedulingEA(threading.Thread):
                             "period_con": len(self.constraints[1]), "room_con": len(self.constraints[0]),
                             "institutional_con": len(self.constraints[2])},
                 "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
-                       "tournsize": self.tournsize}}
+                       "tournsize": self.tournsize, "name": self.name}}
 
     def __str__(self):
         return json.dumps(self.jsonify(), sort_keys=True)
