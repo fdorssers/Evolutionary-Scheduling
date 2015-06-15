@@ -16,7 +16,7 @@ A: ...
 idea: track the progress individual memes make
 todo: setup experiment with different memes
 idea: changing the mutation, crossover and meme probability through the generationss (possibly encode in the meme)
-idea: let hof use the sum of wvalues
-idea: add hof to each population
 
 - Tabu search?
+- Str rep for students, periods and rooms
+- Encode order of memes in genome

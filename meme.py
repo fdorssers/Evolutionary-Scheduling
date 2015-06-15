@@ -1,5 +1,7 @@
 from random import randint, random, sample
 
+import numpy as np
+
 from individual import get_period_to_room_to_exam_mapping, get_student_to_period_to_exam_mapping
 import individual
 from institutionalconstraint import InstitutionalEnum
@@ -9,20 +11,26 @@ __author__ = 'pieter'
 
 NUM_MEMES = 6
 
+
 def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
 
     def memes(individual):
 
-        memepb = individual.memepb
-        # room_limit_repair(individual, exams, rooms)
-        # memepb = [1]*NUM_MEMES
-        individual = frontload_repair(individual, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0])
-        individual = room_limit_naive(individual, exams, periods, rooms, memepb[1])
-        individual = exam_order_repair(individual, period_con, memepb[2])
-        individual = exam_coincidence_repair(individual, period_con, memepb[3])
-        individual = period_exclusion_repair(individual, len(periods), period_con, memepb[4])
-        individual = student_exam_coincidence_repair(individual, exams, periods, memepb[5])
+        meme_gene = individual.meme_gene
+        meme_gene_len = len(meme_gene)
+        memepb = meme_gene[:meme_gene_len / 2]
+        meme_order = meme_gene[meme_gene_len / 2:]
+        meme_order = np.argsort(meme_order)
+
+        memes = [lambda indi: frontload_repair(indi, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0]),
+                 lambda indi: room_limit_naive(indi, exams, periods, rooms, memepb[1]),
+                 lambda indi: exam_order_repair(indi, period_con, memepb[2]),
+                 lambda indi: exam_coincidence_repair(indi, period_con, memepb[3]),
+                 lambda indi: period_exclusion_repair(indi, len(periods), period_con, memepb[4]),
+                 lambda indi: student_exam_coincidence_repair(indi, exams, periods, memepb[5])]
+        for meme_i in meme_order:
+            individual = memes[meme_i](individual)
 
         return individual
 

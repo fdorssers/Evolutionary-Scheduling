@@ -117,10 +117,10 @@ class SchedulingEA(threading.Thread):
         soft_stats.register("best", np.max)
         soft_stats.register("duration", lambda x: round(time.time() - start, 1))
 
-        meme_stats = tools.Statistics(lambda indi: indi.memepb)
-        meme_stats.register("median", lambda x: np.round(np.median(x, 0), 2))
+        meme_stats = tools.Statistics(lambda indi: indi.meme_gene)
+        meme_stats.register("mean", lambda x: np.round(np.mean(x, 0), 2))
 
-        self.stats = tools.MultiStatistics(hard=hard_stats, soft_stats=soft_stats, memepb=meme_stats)
+        self.stats = tools.MultiStatistics(hard=hard_stats, soft=soft_stats, memepb=meme_stats)
 
     def run(self):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,
