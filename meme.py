@@ -7,7 +7,7 @@ from periodhardconstraint import PeriodHardEnum
 
 __author__ = 'pieter'
 
-NUM_MEMES = 5
+NUM_MEMES = 6
 
 def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
@@ -16,11 +16,13 @@ def individual_memes(individual, exams, periods, rooms, constraints):
 
         memepb = individual.memepb
         # room_limit_repair(individual, exams, rooms)
+        # memepb = [1]*NUM_MEMES
         individual = frontload_repair(individual, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0])
         individual = room_limit_naive(individual, exams, periods, rooms, memepb[1])
         individual = exam_order_repair(individual, period_con, memepb[2])
         individual = exam_coincidence_repair(individual, period_con, memepb[3])
         individual = period_exclusion_repair(individual, len(periods), period_con, memepb[4])
+        individual = student_exam_coincidence_repair(individual, exams, periods, memepb[5])
 
         return individual
 
@@ -50,8 +52,9 @@ def student_exam_coincidence_repair(individual, exams, periods, pb=1.0):
         for period, exams in pte.items():
             for exam in exams[1:]:
                 if exam not in exams_moved and random() < pb:
-                    new_period = sample(all_periods - set(pte.keys()))
-                    individual[exam] = (individual[exam[0]], new_period)
+                    exams_moved.add(exam)
+                    new_period = sample(all_periods - set(pte.keys()), 1)
+                    individual[exam] = (individual[exam][0], new_period[0])
     return individual
 
 
