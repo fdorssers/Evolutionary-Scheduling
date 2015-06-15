@@ -26,6 +26,13 @@ def create_directory(dir):
             os.makedirs(dir)
 
 
+def dict_add(dict, key, value):
+    if key in dict:
+        dict[key] += value
+    else:
+        dict[key] = value
+
+
 def plot_ea_progress(logbook, parameter_str):
     duration, best, worst, average = logbook.select("duration", "best", "worst", "avg")
     plt.plot(duration, best)

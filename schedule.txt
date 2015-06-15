@@ -19,4 +19,4 @@ idea: changing the mutation, crossover and meme probability through the generati
 
 - Tabu search?
 - Str rep for students, periods and rooms
-- Encode order of memes in genome
+- How fast are the memes

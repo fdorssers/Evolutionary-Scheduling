@@ -1,8 +1,7 @@
-from copy import deepcopy
-import threading
 import matplotlib
-
 matplotlib.use("Agg")
+
+from copy import deepcopy
 
 from queue import Queue, Empty
 import os
@@ -22,7 +21,7 @@ __author__ = 'pieter'
 q = Queue()
 
 
-def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, dataset=1, init_ea_file=None):
+def main(individuals=10, generations=5, crossover_pb=0.5, mutation_pb=0.2, dataset=1, init_ea_file=None):
     # Parse possible commandline arguments
 
     def parse_list_or_number(param, type):
