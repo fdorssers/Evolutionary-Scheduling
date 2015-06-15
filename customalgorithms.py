@@ -51,7 +51,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
     logbook = tools.Logbook()
     logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
-    if eatype != 0:
+    if eatype != 1:
         if hasattr(toolbox, 'individual_meme'):
             population = list(toolbox.map(toolbox.individual_meme, population))
         if hasattr(toolbox, 'population_meme'):
@@ -79,7 +79,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
 
-        if eatype != 0:
+        if eatype != 1:
             if hasattr(toolbox, 'individual_meme'):
                 offspring = list(toolbox.map(toolbox.individual_meme, offspring))
             if hasattr(toolbox, 'population_meme'):
