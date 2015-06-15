@@ -132,7 +132,7 @@ class SchedulingEA(threading.Thread):
         return {"problem": {"exams": self.num_exams, "periods": self.num_periods, "rooms": self.num_rooms,
                             "period_con": len(self.constraints[1]), "room_con": len(self.constraints[0]),
                             "institutional_con": len(self.constraints[2])},
-                "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutbp": self.mutpb,
+                "ea": {"indi": self.indi, "gen": self.gen, "cxpb": self.cxpb, "indpb": self.indpb, "mutpb": self.mutpb,
                        "tournsize": self.tournsize, "name": self.name, "eatype": self.eatype}}
 
     def __str__(self):
