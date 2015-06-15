@@ -102,11 +102,12 @@ def get_student_to_period_to_exam_mapping(schedule, exams):
         for student in exams[exam_i].students:
             if student in stpte:
                 if period_i in stpte[student]:
-                    stpte[student][period_i].add(exam_i)
+                    stpte[student][period_i].append(exam_i)
                 else:
                     stpte[student][period_i] = [exam_i]
             else:
-                stpte[student] = {period_i: exam_i}
+                stpte[student] = {period_i: [exam_i]}
+    return stpte
 
 
 def get_room_to_exam_mapping2(schedule, exams):
