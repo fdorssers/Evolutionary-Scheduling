@@ -24,16 +24,16 @@ def individual_memes(individual, exams, periods, rooms, constraints, eatype):
         meme_order = np.argsort(meme_order)
 
         if eatype == 2 or eatype == 4:
-            memepb = [1]*NUM_MEMES
+            meme_pb = [1]*NUM_MEMES
         if eatype == 2 or eatype == 3:
             meme_order = range(0, NUM_MEMES)
 
-        memes = [lambda indi: frontload_repair(indi, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], memepb[0]),
-                 lambda indi: room_limit_naive(indi, exams, periods, rooms, memepb[1]),
-                 lambda indi: exam_order_repair(indi, period_con, memepb[2]),
-                 lambda indi: exam_coincidence_repair(indi, period_con, memepb[3]),
-                 lambda indi: period_exclusion_repair(indi, len(periods), period_con, memepb[4]),
-                 lambda indi: student_exam_coincidence_repair(indi, exams, periods, memepb[5])]
+        memes = [lambda indi: frontload_repair(indi, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0], meme_pb[0]),
+                 lambda indi: room_limit_naive(indi, exams, periods, rooms, meme_pb[1]),
+                 lambda indi: exam_order_repair(indi, period_con, meme_pb[2]),
+                 lambda indi: exam_coincidence_repair(indi, period_con, meme_pb[3]),
+                 lambda indi: period_exclusion_repair(indi, len(periods), period_con, meme_pb[4]),
+                 lambda indi: student_exam_coincidence_repair(indi, exams, periods, meme_pb[5])]
         for meme_i in meme_order:
             individual = memes[meme_i](individual)
 
