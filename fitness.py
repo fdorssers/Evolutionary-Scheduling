@@ -74,7 +74,7 @@ def exam_coincidence_constraint(schedule, period_con):
 def period_exclusion_constraint(schedule, period_con):
     """Returns penalty
 
-    Two exams that should have same periods but don't.
+    Two exams that shouldn't have same periods but don't.
     """
     exam_coincidence_constraints = period_con[PeriodHardEnum.EXCLUSION]
     violations = 0

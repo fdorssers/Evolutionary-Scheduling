@@ -1,3 +1,4 @@
+from copy import deepcopy
 import threading
 import matplotlib
 
@@ -75,7 +76,7 @@ def main(individuals=10, generations=3, crossover_pb=0.5, mutation_pb=0.2, datas
         try:
             ea, pop, logbook = q.get(False)
             if not ea.done and (not hasattr(ea, 'last_save') or ea.last_save + 1000. < time.time()):
-                save_data(ea, pop, logbook)
+                save_data(ea, pop, deepcopy(logbook))
                 ea.last_save = time.time()
             q.task_done()
         except Empty:
