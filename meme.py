@@ -7,6 +7,7 @@ from periodhardconstraint import PeriodHardEnum
 
 __author__ = 'pieter'
 
+NUM_MEMES = 5
 
 def individual_memes(individual, exams, periods, rooms, constraints):
     room_con, period_con, institute_con = constraints
@@ -16,15 +17,15 @@ def individual_memes(individual, exams, periods, rooms, constraints):
         memepb = individual.memepb
         # room_limit_repair(individual, exams, rooms)
         rand = random()
-        if rand < 1 / 5 * memepb:
+        if rand < 1 / 5 * memepb[0]:
             individual = frontload_repair(individual, exams, periods, institute_con[InstitutionalEnum.FRONTLOAD][0])
-        elif rand < 2 / 5 * memepb:
+        elif rand < 2 / 5 * memepb[1]:
             individual = room_limit_naive(individual, exams, periods, rooms)
-        elif rand < 3 / 5 * memepb:
+        elif rand < 3 / 5 * memepb[2]:
             individual = exam_order_repair(individual, period_con)
-        elif rand < 4 / 5 * memepb:
+        elif rand < 4 / 5 * memepb[3]:
             individual = exam_coincidence_repair(individual, period_con)
-        elif rand < memepb:
+        elif rand < memepb[4]:
             individual = period_exclusion_repair(individual, len(periods), period_con)
 
         return individual

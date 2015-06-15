@@ -6,11 +6,11 @@ __author__ = 'pieter'
 
 
 class Individual(list):
-    def __init__(self, func, num_rooms, num_periods):
+    def __init__(self, func, num_rooms, num_periods, num_memes):
         super().__init__(func())
         self.num_rooms = num_rooms
         self.num_periods = num_periods
-        self.memepb = random.random() * 0.01
+        self.memepb = np.random.rand(num_memes) * 0.01
 
     def __hash__(self):
         return hash(str(list(self)))
@@ -55,8 +55,9 @@ def mutate(individual, indpb):
     """
     Mutate the schedule
     """
-    if random.random() < indpb:
-        individual.memepb = random.random()
+    for i in range(0, individual.memepb.shape[0]):
+        if random.random() < indpb:
+            individual.memepb[i] = random.random()
     for i in range(0, len(individual)):
         if random.random() < indpb:
             new_room = random.randint(0, individual.num_rooms - 1)
@@ -67,10 +68,9 @@ def mutate(individual, indpb):
 
 def cxTwoPoint(ind1, ind2):
     # Crossover meme probability
-    if random.random() < .5:
-        ind1.memepb = ind1.memepb
-    else:
-        ind2.memepb = ind1.memepb
+    if type(ind1) is not np.ndarray:
+        ind1.memepb, ind2.memepb = cxTwoPoint(ind1.memepb, ind2.memepb)
+
     # Crossover schedule representation
     size = min(len(ind1), len(ind2))
     cxpoint1 = random.randint(1, size)
