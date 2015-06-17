@@ -55,6 +55,15 @@ def naive_fitness(schedule, exams, periods, rooms, constraints):
     return hard_fitness, soft_fitness
 
 
+def hard_fitness_first(schedule, exams, periods, rooms, constraints):
+    hard_fitness, soft_fitness = naive_fitness(schedule, exams, periods, rooms, constraints)
+    return hard_fitness, soft_fitness
+
+
+def soft_fitness_first(schedule, exams, periods, rooms, constraints):
+    hard_fitness, soft_fitness = naive_fitness(schedule, exams, periods, rooms, constraints)
+    return soft_fitness, hard_fitness
+
 # Hard constraints
 
 def exam_coincidence_constraint(schedule, period_con):

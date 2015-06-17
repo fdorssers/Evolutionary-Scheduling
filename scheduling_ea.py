@@ -59,7 +59,7 @@ class SchedulingEA(object):
         self.init_stats()
 
         pool = multiprocessing.Pool()
-        self.toolbox.register("map", pool.map)
+        # self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
         creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
@@ -79,7 +79,9 @@ class SchedulingEA(object):
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
 
         # Use the fitness function specified in this file
-        self.toolbox.register("evaluate", fitness.naive_fitness, exams=self.exams, periods=self.periods,
+        self.toolbox.register("evaluate_hard", fitness.hard_fitness_first, exams=self.exams, periods=self.periods,
+                              rooms=self.rooms, constraints=self.constraints)
+        self.toolbox.register("evaluate_soft", fitness.soft_fitness_first, exams=self.exams, periods=self.periods,
                               rooms=self.rooms, constraints=self.constraints)
         # Use two point cross over
         self.toolbox.register("mate", individual.cxTwoPoint)

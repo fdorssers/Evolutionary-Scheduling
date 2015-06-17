@@ -96,8 +96,8 @@ def load_population(file_name):
 
 def save_data(ea, pop, logbook):
     def temp_file(name):
-        # return os.path.join(log_dir, str(random.randint(0, 10 ** 10)) + name)
-        return os.path.join('/scratch/jmarsman', str(random.randint0, 10**10) + name)
+        return os.path.join(log_dir, str(random.randint(0, 10 ** 10)) + name)
+        # return os.path.join('/scratch/jmarsman', str(random.randint0, 10**10) + name)
 
 
     def write_to_zip_and_remove(temp, path):

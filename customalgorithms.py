@@ -58,16 +58,17 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
             population = toolbox.population_meme(population)
 
     # Evaluate the individuals with an invalid fitness
-    invalid_ind = [ind for ind in population if not ind.fitness.valid]
-    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-    for ind, fit in zip(invalid_ind, fitnesses):
+    # invalid_ind = [ind for ind in population if not ind.fitness.valid]
+
+    fitnesses = toolbox.map(toolbox.evaluate_hard, population)
+    for ind, fit in zip(population, fitnesses):
         ind.fitness.values = fit
 
     if halloffame is not None:
         halloffame.update(population)
 
     record = stats.compile(population) if stats else {}
-    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+    logbook.record(gen=0, nevals=len(population), **record)
     if verbose:
         print(logbook.stream)
 
@@ -86,9 +87,14 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
                 offspring = toolbox.population_meme(offspring)
 
         # Evaluate the individuals with an invalid fitness
-        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
-        for ind, fit in zip(invalid_ind, fitnesses):
+        # invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+
+        # Evaluate all individuals
+        if gen % 2 == 1:
+            fitnesses = toolbox.map(toolbox.evaluate_soft, offspring)
+        else:
+            fitnesses = toolbox.map(toolbox.evaluate_hard, offspring)
+        for ind, fit in zip(offspring, fitnesses):
             ind.fitness.values = fit
 
         # Update the hall of fame with the generated individuals
@@ -100,7 +106,7 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
 
         # Append the current generation statistics to the logbook
         record = stats.compile(population) if stats else {}
-        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+        logbook.record(gen=gen, nevals=len(offspring), **record)
         if verbose:
             print(logbook.stream)
 
