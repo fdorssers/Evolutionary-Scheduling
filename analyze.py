@@ -1,6 +1,6 @@
 import matplotlib
 
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 
 import json
 import os
@@ -11,6 +11,7 @@ import individual
 from deap import base
 import numpy as np
 from misc import dict_add, create_directory
+import seaborn
 
 __author__ = 'pieter'
 
@@ -53,13 +54,18 @@ def best_memes(hofs):
     return np.array([hof[0].meme_gene for hof in hofs])
 
 
-def plot_fitness(x, y1, y2, title, xlabel, ylabel):
+def plot_fitness(x, y1, y2, title, xlabel, ylabel, continuous=True):
     matplotlib.pyplot.clf()
-    matplotlib.pyplot.plot(np.array(x).T, np.array(y1).T)
-    matplotlib.pyplot.plot(np.array(x).T, np.array(y2).T)
+    marker = '-' if continuous else 'o'
+    matplotlib.pyplot.plot(np.array(x).T, np.array(y1).T, marker, ms=15)
+    matplotlib.pyplot.plot(np.array(x).T, np.array(y2).T, marker, ms=15)
     matplotlib.pyplot.title(title)
     matplotlib.pyplot.xlabel(xlabel)
     matplotlib.pyplot.ylabel(ylabel)
+    matplotlib.pyplot.legend(["Best", "Mean"], loc='lower right')
+
+    if xlabel == 'EA type':
+        matplotlib.pyplot.xticks(x, ['Default', '1st MA', '2nd MA prob', '2nd MA order', '2nd MA both'])
 
 
 def bar_memes(x, y1, y2, title, meme_names):
@@ -79,6 +85,7 @@ def data_info_vs_fitness(dir, filter, info_key):
     for file in os.listdir(dir):
         filename = os.path.join(dir, file)
         if filter(filename):
+            print("Getting info data from {}".format(filename))
             info, logbook, population, hof = read_log(filename)
             dict_add(hofs, info["ea"][info_key], [hof])
             dict_add(pops, info["ea"][info_key], [population])
@@ -97,6 +104,7 @@ def data_memes(dir, filter):
     for file in os.listdir(dir):
         filename = os.path.join(dir, file)
         if filter(filename):
+            print("Getting meme data from {}".format(filename))
             info, logbook, population, hof = read_log(filename)
             hofs.append(hof)
             pops.append(population)
@@ -112,17 +120,48 @@ def data_memes(dir, filter):
 
 
 def info_vs_fitness(dir, filter):
-    for info in ['indi', 'cxpb', 'mutpb', 'gen', 'eatype']:
+    names = {'indi': 'Individuals', 'cxpb': 'Crossover probability', 'mutpb':'Mutation probability', 'gen':'Generations', 'eatype':'EA type'}
+    for info in ['eatype']: #'indi', 'cxpb', 'mutpb', 'gen']:
         xs, ys_hard_best, ys_hard_mean, ys_soft_best, ys_soft_mean = data_info_vs_fitness(dir, filter, info)
         create_directory('analyze')
-        plot_fitness(xs, ys_hard_best, ys_hard_mean, "Hard constraint fitness vs {}".format(info), info, "Avg fitness")
+        plot_fitness(xs, ys_hard_best, ys_hard_mean, "Hard constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info is not 'eatype')
         matplotlib.pyplot.savefig('analyze/hard_vs_{}'.format(info))
-        plot_fitness(xs, ys_soft_best, ys_soft_mean, "Soft constraint fitness vs {}".format(info), info, "Avg fitness")
+        plot_fitness(xs, ys_soft_best, ys_soft_mean, "Soft constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info is not 'eatype')
         matplotlib.pyplot.savefig('analyze/soft_vs_{}'.format(info))
 
 
-dir = "logs"
-filter = lambda filename: True  # "2015_06_14" in filename
+def analyze_single_meme(filename):
+    _, logbook, _, _ = read_log(filename)
+    memes = np.array(logbook.chapters['memepb'].select('mean'))
+    matplotlib.pyplot.figure()
+    matplotlib.pyplot.title('Probability of applying meme')
+    matplotlib.pyplot.plot(memes[:, :6])
+    matplotlib.pyplot.legend(['LargerExam', 'RoomRelated', 'PeriodRelated', 'Exam coincidence', 'Exam exclusion', 'Student coincidence'])
+    matplotlib.pyplot.savefig('analyze/single_meme_pb')
+    matplotlib.pyplot.figure()
+    matplotlib.pyplot.title('Order of applying meme')
+    matplotlib.pyplot.plot(memes[:, 6:])
+    matplotlib.pyplot.legend(['LargerExam', 'RoomRelated', 'PeriodRelated', 'Exam coincidence', 'Exam exclusion', 'Student coincidence'])
+    matplotlib.pyplot.savefig('analyze/single_meme_order')
 
-info_vs_fitness(dir, filter)
-data_memes(dir, filter)
+
+def analyze_single_progress(filename):
+    _, logbook, _, _ = read_log(filename)
+    means = np.array(logbook.chapters['hard'].select('avg'))
+    matplotlib.pyplot.figure()
+    matplotlib.pyplot.title('Average hard constraint violations')
+    matplotlib.pyplot.plot(means)
+    matplotlib.pyplot.xlabel("Generation")
+    matplotlib.pyplot.ylabel("Fitness")
+    matplotlib.pyplot.savefig('analyze/progress')
+
+
+
+dir = "logs"
+filter = lambda filename: "exp_type" in filename
+
+# info_vs_fitness(dir, filter)
+# data_memes(dir, filter)
+filename = 'logs/ea_2015_06_15_18_36_50_name=exp_type_ind=1000_gen=100_set=1_cpb=0.5_mpb=0.15_eatype=5_rep=0_2437.zip'
+analyze_single_meme(filename)
+analyze_single_progress(filename)
