@@ -15,8 +15,6 @@ import schedule_parser_2 as parser
 
 __author__ = 'pieter'
 
-# q = Queue()
-
 
 def main(individuals=[10], generations=[3], crossover_pb=[0.5], mutation_pb=[0.2], dataset=[1], experiment_name='NA',
          init_ea_file=None, eatype=[3], repeat=1):
@@ -38,18 +36,17 @@ def main(individuals=[10], generations=[3], crossover_pb=[0.5], mutation_pb=[0.2
                                 else:
                                     # Get the original name of the ea
                                     ea_name = os.path.split(init_ea_file)[-1][:-9]
-                                print(
-                                    "Starting {} with {} individuals, {} generations, {} ea type, {} repeat, "
-                                    "{} crossover probability and {} mutation "
-                                    "probability on {}".format(ea_name, num_individual, num_generations, eat, r, cxpb,
-                                                               mutpb, dataset))
+                                print("Starting {} with {} individuals, {} generations, {} ea type, {} repeat, "
+                                      "{} crossover probability and {} mutation "
+                                      "probability on {}".format(ea_name, num_individual, num_generations, eat, r, cxpb,
+                                                                 mutpb, dataset))
                                 ea2 = SchedulingEA(*info, name=ea_name, indi=num_individual, gen=num_generations,
                                                    indpb=0.1, tournsize=3, cxpb=cxpb, mutpb=mutpb, eatype=eat,
                                                    save_callback=save_fun)
                                 ea2.save_name = ea2.name + '_name={}_ind={}_gen={}_set={}_cpb={}_mpb={}_eatype={' \
-                                                           '}_rep={}'.format(
-                                    experiment_name, num_individual, num_generations, dataset[18:19], cxpb, mutpb, eat,
-                                    r) + '_' + str(random.randint(1000, 9999)).zfill(4)
+                                                           '}_rep={}'.format(experiment_name, num_individual,
+                                    num_generations, dataset[18:19], cxpb, mutpb, eat, r) + '_' + str(
+                                    random.randint(1000, 9999)).zfill(4)
                                 if init_ea_file is not None:
                                     pop, ea2.hof = load_population(init_ea_file)
                                     ea2.pop = (pop + ea2.pop)[:num_individual]
@@ -148,8 +145,7 @@ if __name__ == "__main__":
     argument_parser.add_argument('-s', '--setnumber', type=int, nargs='+', help='number of the dataset', required=False)
     argument_parser.add_argument('-e', '--eatype', type=int, nargs='+',
                                  help='type of evolutionary algorithm (1=standard, 2=meme, 3=probablistic memes, '
-                                      '4=probabilistic meme order, 5=probabilistic memes and order)',
-                                 required=False)
+                                      '4=probabilistic meme order, 5=probabilistic memes and order)', required=False)
     argument_parser.add_argument('-r', '--repeat', type=int, help='number of times the experiment is repeated',
                                  required=False)
     argument_parser.add_argument('-b', '--batchname', help='name of the batch', required=False)
