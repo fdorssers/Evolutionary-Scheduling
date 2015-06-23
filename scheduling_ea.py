@@ -11,6 +11,8 @@ import numpy as np
 
 from customalgorithms import ea_custom
 from customalgorithms import selTournament
+from customalgorithms import selTournamentHard
+from customalgorithms import selTournamentSoft
 import fitness
 import individual
 import meme
@@ -60,7 +62,7 @@ class SchedulingEA(object):
         self.init_stats()
 
         pool = multiprocessing.Pool()
-        self.toolbox.register("map", pool.map)
+        # self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
         creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
@@ -92,7 +94,9 @@ class SchedulingEA(object):
         self.toolbox.register("mutate", individual.mutate, indpb=self.indpb)
         # self.toolbox.decorate("mutate", meme.mutate_memes)
         # Use tournament selection
-        self.toolbox.register("select", tools.selTournament, tournsize=self.tournsize)
+        self.toolbox.register("select", selTournament, tournsize=self.tournsize)
+        self.toolbox.register("select_hard", selTournamentHard, tournsize=self.tournsize)
+        self.toolbox.register("select_soft", selTournamentSoft, tournsize=self.tournsize)
         # Use individual memes
         self.toolbox.register("individual_meme", meme.individual_memes, exams=self.exams, periods=self.periods,
                               rooms=self.rooms, constraints=self.constraints, eatype=self.eatype)

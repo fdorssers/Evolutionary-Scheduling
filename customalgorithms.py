@@ -1,5 +1,6 @@
 from deap.algorithms import varAnd
 from deap import tools
+import random
 
 
 def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, halloffame=None, verbose=__debug__,
@@ -76,7 +77,11 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
     # Begin the generational process
     for gen in range(1, ngen + 1):
         # Select the next generation individuals
-        offspring = toolbox.select(population, len(population))
+        # offspring = toolbox.select(population, len(population))
+        if gen % 2 == 1:
+            offspring = toolbox.select_soft(population, len(population))
+        else:
+            offspring = toolbox.select_hard(population, len(population))
 
         # Vary the pool of individuals
         offspring = varAnd(offspring, toolbox, cxpb, mutpb)
@@ -116,3 +121,101 @@ def ea_custom(population, toolbox, cxpb, mutpb, ngen, eatype, stats=None, hallof
             toolbox.iteration_callback(population, logbook)
 
     return population, logbook
+
+
+def selRandom(individuals, k):
+    """Select *k* individuals at random from the input *individuals* with
+    replacement. The list returned contains references to the input
+    *individuals*.
+
+    :param individuals: A list of individuals to select from.
+    :param k: The number of individuals to select.
+    :returns: A list of selected individuals.
+
+    This function uses the :func:`~random.choice` function from the
+    python base :mod:`random` module.
+    """
+    return [random.choice(individuals) for i in range(k)]
+
+
+def selTournament(individuals, k, tournsize):
+    """Select *k* individuals from the input *individuals* using *k*
+    tournaments of *tournsize* individuals. The list returned contains
+    references to the input *individuals*.
+
+    :param individuals: A list of individuals to select from.
+    :param k: The number of individuals to select.
+    :param tournsize: The number of individuals participating in each tournament.
+    :returns: A list of selected individuals.
+
+    This function uses the :func:`~random.choice` function from the python base
+    :mod:`random` module.
+    """
+    chosen = []
+    for i in range(k):
+        aspirants = selRandom(individuals, tournsize)
+        chosen.append(max(aspirants, key=attrgetter("fitness")))
+    return chosen
+
+
+def selTournamentHard(individuals, k, tournsize):
+    chosen = []
+    fgh = fitnessgetter(hard_first=True)
+    for i in range(k):
+        aspirants = selRandom(individuals, tournsize)
+        chosen.append(max(aspirants, key=fgh))
+    return chosen
+
+
+def selTournamentSoft(individuals, k, tournsize):
+    chosen = []
+    fgs = fitnessgetter(hard_first=False)
+    for i in range(k):
+        aspirants = selRandom(individuals, tournsize)
+        chosen.append(max(aspirants, key=fgs))
+    return chosen
+
+
+class fitnessgetter:
+    def __init__(self, hard_first=True):
+        if hard_first:
+            def func(obj):
+                return obj.fitness.wvalues
+            self._call = func
+        else:
+            def func(obj):
+                return obj.fitness.wvalues[::-1]
+            self._call = func
+
+    def __call__(self, obj):
+        return self._call(obj)
+
+
+class attrgetter:
+    """
+    Return a callable object that fetches the given attribute(s) from its operand.
+    After f = attrgetter('name'), the call f(r) returns r.name.
+    After g = attrgetter('name', 'date'), the call g(r) returns (r.name, r.date).
+    After h = attrgetter('name.first', 'name.last'), the call h(r) returns
+    (r.name.first, r.name.last).
+    """
+    def __init__(self, attr, *attrs):
+        if not attrs:
+            if not isinstance(attr, str):
+                raise TypeError('attribute name must be a string')
+            names = attr.split('.')
+
+            def func(obj):
+                for name in names:
+                    obj = getattr(obj, name)
+                return obj
+            self._call = func
+        else:
+            getters = tuple(map(attrgetter, (attr,) + attrs))
+
+            def func(obj):
+                return tuple(getter(obj) for getter in getters)
+            self._call = func
+
+    def __call__(self, obj):
+        return self._call(obj)
