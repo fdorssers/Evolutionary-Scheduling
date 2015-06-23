@@ -62,7 +62,7 @@ class SchedulingEA(object):
         self.init_stats()
 
         pool = multiprocessing.Pool()
-        # self.toolbox.register("map", pool.map)
+        self.toolbox.register("map", pool.map)
 
     def init_create_types(self):
         creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
