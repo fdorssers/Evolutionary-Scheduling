@@ -120,13 +120,10 @@ def get_room_to_exam_mapping2(schedule, exams):
     return room_to_exam
 
 
-def get_period_to_exam_mapping(schedule, exams):
-    period_to_exam = dict()
+def get_period_to_exam_mapping(schedule, exams, periods):
+    period_to_exam = {i: [] for i in range(len(periods))}
     for exam_i, (_, period_i) in enumerate(schedule):
-        if period_i in period_to_exam:
             period_to_exam[period_i].append(exams[exam_i])
-        else:
-            period_to_exam[period_i] = [exams[exam_i]]
     return period_to_exam
 
 
