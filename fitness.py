@@ -167,7 +167,7 @@ def two_exams_in_a_row_constraint(schedule, periods, exams):
     to back. Once this has been established, the number of students involved in each occurance should be added and 
     multiplied by the number provided in the �two in a row' weighting within the �Institutional Model Index'.
     """
-    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_exam = get_period_to_exam_mapping(schedule, exams, periods)
     periods_idx = range(len(periods))
     violations = 0
     for first_period, second_period in zip(periods_idx[:-1], periods_idx[1:]):
@@ -185,7 +185,7 @@ def two_exams_in_a_day_constraint(schedule, periods, exams):
     two exams in a day which are not directly adjacent, i.e. not back to back, and multiply this by the ' two in a 
     day' weighting provided within the 'Institutional Model Index'.
     """
-    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_exam = get_period_to_exam_mapping(schedule, exams, periods)
     violations = 0
     for first_period in range(len(periods)):
         for second_period in range(first_period + 2, len(periods)):
@@ -217,7 +217,7 @@ def period_spread_constraint(schedule, exams, institute_con):
     return violations
 
 
-def period_spread_constraint2(schedule, exams, institute_con):
+def period_spread_constraint2(schedule, exams, periods, institute_con):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
@@ -226,7 +226,7 @@ def period_spread_constraint2(schedule, exams, institute_con):
     """
     period_spread_constraints = institute_con[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
-    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_exam = get_period_to_exam_mapping(schedule, exams, periods)
     period_to_students = dict()
     for period, exams in period_to_exam.items():
         period_to_students[period] = set(flatten(map(lambda exam: exam.students, exams)))
@@ -246,7 +246,7 @@ def period_spread_constraint2(schedule, exams, institute_con):
     return violations
 
 
-def period_spread_constraint3(schedule, exams, institute_con):
+def period_spread_constraint3(schedule, exams, periods, institute_con):
     """Returns penalty
 
     This constraint allows an organisation to 'spread' an schedule's examinations over a specified number of periods. 
@@ -255,7 +255,7 @@ def period_spread_constraint3(schedule, exams, institute_con):
     """
     period_spread_constraints = institute_con[InstitutionalEnum.PERIODSPREAD]
     period_lengths = period_spread_constraints[0].values if len(period_spread_constraints) > 0 else []
-    period_to_exam = get_period_to_exam_mapping(schedule, exams)
+    period_to_exam = get_period_to_exam_mapping(schedule, exams, periods)
     period_to_students = dict()
     for period, exams in period_to_exam.items():
         period_to_students[period] = set(flatten(map(lambda exam: exam.students, exams)))

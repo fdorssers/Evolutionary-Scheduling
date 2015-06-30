@@ -61,8 +61,8 @@ class SchedulingEA(object):
         self.init_population()
         self.init_stats()
 
-        pool = multiprocessing.Pool()
-        self.toolbox.register("map", pool.map)
+        self.pool = multiprocessing.Pool()
+        self.toolbox.register("map", self.pool.map)
 
     def init_create_types(self):
         creator.create(self.fitness_name, base.Fitness, weights=(-1, -1))
@@ -136,6 +136,7 @@ class SchedulingEA(object):
         self.pop, self.logbook = ea_custom(self.pop, self.toolbox, cxpb=self.cxpb, mutpb=self.mutpb, ngen=self.gen,
                                            eatype=self.eatype, stats=self.stats, halloffame=self.hof)
         self.done = True
+        self.pool.close()
 
     def jsonify(self):
         return {"problem": {"exams": self.num_exams, "periods": self.num_periods, "rooms": self.num_rooms,

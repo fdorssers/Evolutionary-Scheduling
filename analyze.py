@@ -67,7 +67,6 @@ def plot_fitness(x, y1, y2, title, xlabel, ylabel, continuous=True):
     if xlabel == 'EA type':
         matplotlib.pyplot.xticks(x, ['Default', '1st MA', '2nd MA prob', '2nd MA order', '2nd MA both'])
 
-
 def bar_memes(x, y1, y2, title, meme_names):
     matplotlib.pyplot.clf()
     matplotlib.pyplot.title(title)
@@ -87,6 +86,7 @@ def data_info_vs_fitness(dir, filter, info_key):
         if filter(filename):
             print("Getting info data from {}".format(filename))
             info, logbook, population, hof = read_log(filename)
+            info["ea"]["set"] = filename[filename.find('_set=')+5:filename.find('_set=')+6]
             dict_add(hofs, info["ea"][info_key], [hof])
             dict_add(pops, info["ea"][info_key], [population])
     keys = list(sorted(hofs.keys()))
@@ -120,13 +120,13 @@ def data_memes(dir, filter):
 
 
 def info_vs_fitness(dir, filter):
-    names = {'indi': 'Individuals', 'cxpb': 'Crossover probability', 'mutpb':'Mutation probability', 'gen':'Generations', 'eatype':'EA type'}
-    for info in ['eatype']: #'indi', 'cxpb', 'mutpb', 'gen']:
+    names = {'indi': 'Individuals', 'cxpb': 'Crossover probability', 'mutpb':'Mutation probability', 'gen':'Generations', 'eatype':'EA type', 'set': 'Dataset'}
+    for info in ['set']: #['eatype', 'indi', 'cxpb', 'mutpb', 'gen']:
         xs, ys_hard_best, ys_hard_mean, ys_soft_best, ys_soft_mean = data_info_vs_fitness(dir, filter, info)
         create_directory('analyze')
-        plot_fitness(xs, ys_hard_best, ys_hard_mean, "Hard constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info is not 'eatype')
+        plot_fitness(xs, ys_hard_best, ys_hard_mean, "Hard constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info not in ['eatype', 'set'])
         matplotlib.pyplot.savefig('analyze/hard_vs_{}'.format(info))
-        plot_fitness(xs, ys_soft_best, ys_soft_mean, "Soft constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info is not 'eatype')
+        plot_fitness(xs, ys_soft_best, ys_soft_mean, "Soft constraint fitness vs {}".format(names[info]), names[info], "Avg fitness", continuous=info not in ['eatype', 'set'])
         matplotlib.pyplot.savefig('analyze/soft_vs_{}'.format(info))
 
 
