@@ -89,3 +89,4 @@ pop/
 es/
 !logs/ea_2015_06_17_18_34_09_name=exp_indi_ind=2000_gen=100_set=1_cpb=0.5_mpb=0.15_eatype=5_rep=3_1371.zip
 analyze/
+*.*~
